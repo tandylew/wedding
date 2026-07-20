@@ -8,11 +8,51 @@
   body { font-family: system-ui, sans-serif; max-width: 640px; margin: 4rem auto;
          padding: 0 1rem; color: #1a56db; }
   h1 { color: #d93025; }
+  button { font: inherit; padding: 0.5rem 1rem; border: 2px solid #1a56db;
+           border-radius: 8px; background: #fff; color: #1a56db; cursor: pointer; }
+  button:hover { background: #1a56db; color: #fff; }
+  input { font: inherit; padding: 0.5rem; border: 2px solid #1a56db;
+          border-radius: 8px; color: inherit; }
+  .row { display: flex; gap: 0.75rem; align-items: center; margin: 1.25rem 0; }
 </style>
 </head>
 <body>
-  <h1>Hello Karaoke</h1>
+  <h1 id="heading">Hello Karaoke</h1>
   <p>This page is the thing you iterate on by speaking. Say a change in the
      karaoke HUD — Claude edits this repo, commits, and the preview reloads.</p>
+
+  <div class="row">
+    <button id="color-btn">Change heading color</button>
+    <button id="count-btn">Clicked 0 times</button>
+  </div>
+
+  <div class="row">
+    <label for="name-input">Your name:</label>
+    <input id="name-input" type="text" placeholder="Type here…" />
+  </div>
+  <p id="greeting"></p>
+
+<script>
+  const heading = document.getElementById("heading");
+  const colors = ["#d93025", "#1a8f3c", "#a020c0", "#e07800", "#1a56db"];
+  let colorIndex = 0;
+  document.getElementById("color-btn").addEventListener("click", () => {
+    colorIndex = (colorIndex + 1) % colors.length;
+    heading.style.color = colors[colorIndex];
+  });
+
+  let clicks = 0;
+  const countBtn = document.getElementById("count-btn");
+  countBtn.addEventListener("click", () => {
+    clicks++;
+    countBtn.textContent = `Clicked ${clicks} time${clicks === 1 ? "" : "s"}`;
+  });
+
+  const greeting = document.getElementById("greeting");
+  document.getElementById("name-input").addEventListener("input", (e) => {
+    const name = e.target.value.trim();
+    greeting.textContent = name ? `🎤 Welcome to karaoke, ${name}!` : "";
+  });
+</script>
 </body>
 </html>
