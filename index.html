@@ -3,56 +3,155 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Karaoke Demo Site</title>
+<title>Wedding Planner</title>
 <style>
-  body { font-family: system-ui, sans-serif; max-width: 640px; margin: 4rem auto;
-         padding: 0 1rem; color: #1a56db; }
-  h1 { color: #d93025; }
-  button { font: inherit; padding: 0.5rem 1rem; border: 2px solid #1a56db;
-           border-radius: 8px; background: #fff; color: #1a56db; cursor: pointer; }
-  button:hover { background: #1a56db; color: #fff; }
-  input { font: inherit; padding: 0.5rem; border: 2px solid #1a56db;
-          border-radius: 8px; color: inherit; }
-  .row { display: flex; gap: 0.75rem; align-items: center; margin: 1.25rem 0; }
+  body { font-family: system-ui, sans-serif; max-width: 640px; margin: 3rem auto;
+         padding: 0 1rem; color: #4a3b42; background: #fdf8f5; }
+  h1 { color: #b0567a; margin-bottom: 0.25rem; }
+  h2 { color: #b0567a; border-bottom: 2px solid #ecd9e2; padding-bottom: 0.3rem; }
+  .subtitle { color: #8a7580; margin-top: 0; }
+  button { font: inherit; padding: 0.45rem 0.9rem; border: 2px solid #b0567a;
+           border-radius: 8px; background: #fff; color: #b0567a; cursor: pointer; }
+  button:hover { background: #b0567a; color: #fff; }
+  button.small { padding: 0.15rem 0.5rem; font-size: 0.85rem; }
+  input { font: inherit; padding: 0.45rem; border: 2px solid #ecd9e2;
+          border-radius: 8px; color: inherit; flex: 1; min-width: 0; }
+  input:focus { outline: none; border-color: #b0567a; }
+  .row { display: flex; gap: 0.6rem; align-items: center; margin: 0.9rem 0; }
+  ul { list-style: none; padding: 0; }
+  li { display: flex; gap: 0.6rem; align-items: center; padding: 0.5rem 0.6rem;
+       border-bottom: 1px solid #ecd9e2; }
+  li .grow { flex: 1; }
+  .done { text-decoration: line-through; color: #b0a3aa; }
+  .rsvp-yes { color: #2e7d4f; font-weight: 600; }
+  .rsvp-pending { color: #c07b1a; }
+  .stats { color: #8a7580; font-size: 0.9rem; }
 </style>
 </head>
 <body>
-  <h1 id="heading">Hello Karaoke</h1>
-  <p>This page is the thing you iterate on by speaking. Say a change in the
-     karaoke HUD — Claude edits this repo, commits, and the preview reloads.</p>
+  <h1>💍 Our Wedding Planner</h1>
+  <p class="subtitle">Everything for the big day, in one place.</p>
 
+  <h2>Guest List</h2>
   <div class="row">
-    <button id="color-btn">Change heading color</button>
-    <button id="count-btn">Clicked 0 times</button>
+    <input id="guest-input" type="text" placeholder="Guest name…" />
+    <button id="add-guest">Add guest</button>
   </div>
+  <p class="stats" id="guest-stats"></p>
+  <ul id="guest-list"></ul>
 
+  <h2>To-Do List</h2>
   <div class="row">
-    <label for="name-input">Your name:</label>
-    <input id="name-input" type="text" placeholder="Type here…" />
+    <input id="task-input" type="text" placeholder="New task…" />
+    <button id="add-task">Add task</button>
   </div>
-  <p id="greeting"></p>
+  <p class="stats" id="task-stats"></p>
+  <ul id="task-list"></ul>
 
 <script>
-  const heading = document.getElementById("heading");
-  const colors = ["#d93025", "#1a8f3c", "#a020c0", "#e07800", "#1a56db"];
-  let colorIndex = 0;
-  document.getElementById("color-btn").addEventListener("click", () => {
-    colorIndex = (colorIndex + 1) % colors.length;
-    heading.style.color = colors[colorIndex];
-  });
+  // --- Guest list ---
+  const guests = [
+    { name: "Mom & Dad", rsvp: true },
+    { name: "Aunt Carol", rsvp: false },
+    { name: "The Nguyens", rsvp: true },
+  ];
+  const guestList = document.getElementById("guest-list");
+  const guestStats = document.getElementById("guest-stats");
+  const guestInput = document.getElementById("guest-input");
 
-  let clicks = 0;
-  const countBtn = document.getElementById("count-btn");
-  countBtn.addEventListener("click", () => {
-    clicks++;
-    countBtn.textContent = `Clicked ${clicks} time${clicks === 1 ? "" : "s"}`;
-  });
+  function renderGuests() {
+    guestList.innerHTML = "";
+    guests.forEach((g, i) => {
+      const li = document.createElement("li");
 
-  const greeting = document.getElementById("greeting");
-  document.getElementById("name-input").addEventListener("input", (e) => {
-    const name = e.target.value.trim();
-    greeting.textContent = name ? `🎤 Welcome to karaoke, ${name}!` : "";
-  });
+      const name = document.createElement("span");
+      name.className = "grow";
+      name.textContent = g.name;
+
+      const status = document.createElement("span");
+      status.textContent = g.rsvp ? "RSVP’d ✓" : "Pending";
+      status.className = g.rsvp ? "rsvp-yes" : "rsvp-pending";
+
+      const toggle = document.createElement("button");
+      toggle.className = "small";
+      toggle.textContent = g.rsvp ? "Mark pending" : "Mark RSVP’d";
+      toggle.addEventListener("click", () => { g.rsvp = !g.rsvp; renderGuests(); });
+
+      const remove = document.createElement("button");
+      remove.className = "small";
+      remove.textContent = "✕";
+      remove.addEventListener("click", () => { guests.splice(i, 1); renderGuests(); });
+
+      li.append(name, status, toggle, remove);
+      guestList.appendChild(li);
+    });
+    const confirmed = guests.filter(g => g.rsvp).length;
+    guestStats.textContent = `${guests.length} guests · ${confirmed} RSVP’d`;
+  }
+
+  function addGuest() {
+    const name = guestInput.value.trim();
+    if (!name) return;
+    guests.push({ name, rsvp: false });
+    guestInput.value = "";
+    renderGuests();
+  }
+  document.getElementById("add-guest").addEventListener("click", addGuest);
+  guestInput.addEventListener("keydown", e => { if (e.key === "Enter") addGuest(); });
+
+  // --- To-do list ---
+  const tasks = [
+    { text: "Book the venue", done: true },
+    { text: "Contact florists for quotes", done: false },
+    { text: "Arrange a DJ", done: false },
+    { text: "Send save-the-dates", done: false },
+    { text: "Schedule cake tasting", done: false },
+    { text: "Book photographer", done: false },
+    { text: "Order invitations", done: false },
+  ];
+  const taskList = document.getElementById("task-list");
+  const taskStats = document.getElementById("task-stats");
+  const taskInput = document.getElementById("task-input");
+
+  function renderTasks() {
+    taskList.innerHTML = "";
+    tasks.forEach((t, i) => {
+      const li = document.createElement("li");
+
+      const checkbox = document.createElement("input");
+      checkbox.type = "checkbox";
+      checkbox.checked = t.done;
+      checkbox.style.flex = "none";
+      checkbox.addEventListener("change", () => { t.done = checkbox.checked; renderTasks(); });
+
+      const label = document.createElement("span");
+      label.className = "grow" + (t.done ? " done" : "");
+      label.textContent = t.text;
+
+      const remove = document.createElement("button");
+      remove.className = "small";
+      remove.textContent = "✕";
+      remove.addEventListener("click", () => { tasks.splice(i, 1); renderTasks(); });
+
+      li.append(checkbox, label, remove);
+      taskList.appendChild(li);
+    });
+    const doneCount = tasks.filter(t => t.done).length;
+    taskStats.textContent = `${doneCount} of ${tasks.length} tasks done`;
+  }
+
+  function addTask() {
+    const text = taskInput.value.trim();
+    if (!text) return;
+    tasks.push({ text, done: false });
+    taskInput.value = "";
+    renderTasks();
+  }
+  document.getElementById("add-task").addEventListener("click", addTask);
+  taskInput.addEventListener("keydown", e => { if (e.key === "Enter") addTask(); });
+
+  renderGuests();
+  renderTasks();
 </script>
 </body>
 </html>
