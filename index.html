@@ -93,9 +93,10 @@
 
   <footer>built by voice</footer>
 
+<script src="karaoke-store.js"></script>
 <script>
   // --- Guest list ---
-  const guests = [];
+  let guests = [];
   const guestList = document.getElementById("guest-list");
   const guestStats = document.getElementById("guest-stats");
   const guestInput = document.getElementById("guest-input");
@@ -128,6 +129,7 @@
     });
     const confirmed = guests.filter(g => g.rsvp).length;
     guestStats.textContent = `${guests.length} guests · ${confirmed} RSVP’d`;
+    kstore.set("guests", guests);
   }
 
   function addGuest() {
@@ -141,7 +143,7 @@
   guestInput.addEventListener("keydown", e => { if (e.key === "Enter") addGuest(); });
 
   // --- To-do list ---
-  const tasks = [
+  let tasks = [
     { text: "Book the venue", done: true },
     { text: "Contact florists for quotes", done: false },
     { text: "Arrange a DJ", done: false },
@@ -179,6 +181,7 @@
     });
     const doneCount = tasks.filter(t => t.done).length;
     taskStats.textContent = `${doneCount} of ${tasks.length} tasks done`;
+    kstore.set("tasks", tasks);
   }
 
   function addTask() {
@@ -443,10 +446,15 @@
   document.getElementById("export-ics").addEventListener("click", () =>
     downloadIcs(events, "wedding-calendar.ics"));
 
-  renderGuests();
-  renderTasks();
   renderInventory();
   renderCalendar();
+
+  (async () => {
+    guests = await kstore.get("guests", guests);
+    tasks = await kstore.get("tasks", tasks);
+    renderGuests();
+    renderTasks();
+  })();
 </script>
 </body>
 </html>
