@@ -60,6 +60,13 @@
   .total-box { background: #fff; border: 2px solid #b0567a; border-radius: 10px;
                padding: 0.9rem 1.1rem; margin: 1rem 0; }
   .total-box .big { font-size: 1.35rem; font-weight: 700; color: #b0567a; margin: 0.5rem 0 0.2rem; }
+  #splash { display: flex; justify-content: center; align-items: center; min-height: 70vh; }
+  #splash[hidden] { display: none; }
+  .splash-card { background: #fff; border: 1px solid #ecd9e2; border-radius: 14px;
+                 padding: 2rem 2.5rem; max-width: 24rem; width: 100%; text-align: center;
+                 display: flex; flex-direction: column; gap: 0.7rem;
+                 box-shadow: 0 6px 24px rgba(176, 86, 122, 0.12); }
+  .splash-card h1 { margin: 0; }
   footer { color: #8a7580; font-size: 0.8rem; text-align: center; margin: 2rem 0 1rem; }
   .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; margin: 0.9rem 0; }
   .cal-grid .head { text-align: center; font-size: 0.8rem; color: #8a7580; padding: 0.3rem 0; }
@@ -75,6 +82,18 @@
 </style>
 </head>
 <body>
+  <div id="splash" hidden>
+    <div class="splash-card">
+      <h1>💍 Our Wedding Planner</h1>
+      <p class="subtitle" id="splash-msg">Log in to see the plans.</p>
+      <input id="splash-name" placeholder="Username" />
+      <input id="splash-pass" type="password" placeholder="Password" />
+      <button id="splash-btn">Log in</button>
+      <p class="note" id="splash-err"></p>
+    </div>
+  </div>
+
+  <main id="app" hidden>
   <h1>💍 Our Wedding Planner</h1>
   <p class="subtitle">Everything for the big day, in one place.</p>
   <div class="row" id="auth-bar"></div>
@@ -144,9 +163,16 @@
 
   <section id="admin-panel" hidden>
     <h2>Members (admin)</h2>
-    <p class="subtitle">The first account created is the admin — after that, only an admin can grant admin rights.</p>
+    <p class="subtitle">Only admins can create accounts or grant admin rights.</p>
+    <div class="row">
+      <input id="new-user-name" placeholder="New username" />
+      <input id="new-user-pass" type="password" placeholder="Temporary password" />
+      <button id="create-user">Create account</button>
+    </div>
+    <p class="note" id="admin-msg"></p>
     <ul id="admin-user-list"></ul>
   </section>
+  </main>
 
   <footer>built by voice</footer>
 
@@ -1021,39 +1047,15 @@
   async function renderAuth() {
     authBar.innerHTML = "";
     const me = kstore.user.current();
-    if (me) {
-      const isAdmin = await kstore.user.isAdmin();
-      const who = el("span", "stats");
-      who.append(`Signed in as ${me}`);
-      if (isAdmin) who.appendChild(el("span", "badge", "admin"));
-      const out = el("button", "small", "Log out");
-      out.addEventListener("click", () => { kstore.user.logout(); location.reload(); });
-      authBar.append(who, out);
-      adminPanel.hidden = !isAdmin;
-      if (isAdmin) renderAdminUsers();
-    } else {
-      adminPanel.hidden = true;
-      const nameIn = el("input");
-      nameIn.placeholder = "Username";
-      nameIn.style.maxWidth = "11rem";
-      const passIn = el("input");
-      passIn.type = "password";
-      passIn.placeholder = "Password";
-      passIn.style.maxWidth = "11rem";
-      const msg = el("span", "note", "");
-      const attempt = kind => async () => {
-        try { await kstore.user[kind](nameIn.value, passIn.value); location.reload(); }
-        catch (e) { msg.textContent = e.message; }
-      };
-      const loginB = el("button", "small", "Log in");
-      loginB.addEventListener("click", attempt("login"));
-      const signupB = el("button", "small", "Sign up");
-      signupB.addEventListener("click", attempt("signup"));
-      passIn.addEventListener("keydown", e => { if (e.key === "Enter") attempt("login")(); });
-      authBar.append(nameIn, passIn, loginB, signupB, msg);
-      if (!(await kstore.user.list()).length)
-        authBar.appendChild(el("span", "stats", "No accounts yet — the first sign-up becomes admin."));
-    }
+    const isAdmin = await kstore.user.isAdmin();
+    const who = el("span", "stats");
+    who.append(`Signed in as ${me}`);
+    if (isAdmin) who.appendChild(el("span", "badge", "admin"));
+    const out = el("button", "small", "Log out");
+    out.addEventListener("click", () => { kstore.user.logout(); location.reload(); });
+    authBar.append(who, out);
+    adminPanel.hidden = !isAdmin;
+    if (isAdmin) renderAdminUsers();
   }
 
   async function renderAdminUsers() {
@@ -1076,17 +1078,56 @@
     });
   }
 
-  renderInventory();
-  renderCalendar();
-  initVenue();
-  renderAuth();
+  document.getElementById("create-user").addEventListener("click", async () => {
+    const nameIn = document.getElementById("new-user-name");
+    const passIn = document.getElementById("new-user-pass");
+    const msg = document.getElementById("admin-msg");
+    try {
+      const name = await kstore.user.signup(nameIn.value, passIn.value);
+      nameIn.value = "";
+      passIn.value = "";
+      msg.textContent = `Account "${name}" created — share the password with them.`;
+      renderAdminUsers();
+    } catch (e) { msg.textContent = e.message; }
+  });
 
-  (async () => {
+  async function renderSplash() {
+    const nameIn = document.getElementById("splash-name");
+    const passIn = document.getElementById("splash-pass");
+    const btn = document.getElementById("splash-btn");
+    const err = document.getElementById("splash-err");
+    const firstRun = (await kstore.user.list()).length === 0;
+    if (firstRun) {
+      document.getElementById("splash-msg").textContent =
+        "Welcome! Create the first account — it becomes the admin.";
+      btn.textContent = "Create admin account";
+    }
+    const go = async () => {
+      try {
+        await (firstRun ? kstore.user.signup(nameIn.value, passIn.value)
+                        : kstore.user.login(nameIn.value, passIn.value));
+        location.reload();
+      } catch (e) { err.textContent = e.message; }
+    };
+    btn.addEventListener("click", go);
+    passIn.addEventListener("keydown", e => { if (e.key === "Enter") go(); });
+    document.getElementById("splash").hidden = false;
+  }
+
+  async function startApp() {
+    document.getElementById("app").hidden = false;
+    renderAuth();
+    renderInventory();
+    renderCalendar();
+    initVenue();
     guests = await kstore.get("guests", guests);
     tasks = await kstore.get("tasks", tasks);
     renderGuests();
     renderTasks();
-  })();
+  }
+
+  if (kstore.user.current()) startApp();
+  else renderSplash();
 </script>
 </body>
 </html>

@@ -13,8 +13,10 @@
  *   kstore.user.current()  (sync)   kstore.user.signup(name, password)
  *   kstore.user.login(name, password)                kstore.user.logout()  (sync)
  *   kstore.user.list()              kstore.user.isAdmin(name?)
- *   kstore.user.setAdmin(name, isAdmin)   — admins only; the first account
- *   ever created is the admin, after that only an admin can grant admin.
+ *   kstore.user.setAdmin(name, isAdmin)   — admins only.
+ *   The first signup creates the admin and signs them in. After that, signup
+ *   only works for a logged-in admin (creates a regular account; the admin
+ *   stays signed in) and admin rights are granted via setAdmin.
  *
  * Data is namespaced per signed-in user (or "guest"). Passwords are stored as
  * salted SHA-256 hashes.
@@ -86,13 +88,18 @@
       if (!name) throw new Error("invalid username");
       if (!password) throw new Error("password required");
       const users = (await rawGet(USERS, {})) || {};
+      const first = Object.keys(users).length === 0;
+      if (!first) {
+        const me = user.current();
+        if (!me || !users[me] || !users[me].admin)
+          throw new Error("only a logged-in admin can create accounts");
+      }
       if (users[name]) throw new Error("user already exists");
       const salt = [...crypto.getRandomValues(new Uint8Array(8))]
         .map((b) => b.toString(16).padStart(2, "0")).join("");
-      users[name] = { salt, hash: await sha256(salt + password),
-                      admin: Object.keys(users).length === 0 };
+      users[name] = { salt, hash: await sha256(salt + password), admin: first };
       await rawSet(USERS, users);
-      sessionStorage.setItem(SITE + ":user", name);
+      if (first) sessionStorage.setItem(SITE + ":user", name);
       return name;
     },
     async login(name, password) {
