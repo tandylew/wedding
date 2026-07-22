@@ -1,10 +1,11 @@
 /* karaoke-store.js — out-of-the-box persistence + simple users for voice-built sites.
  *
  * Works identically in the local preview and on static hosting (GitHub Pages):
- *   • localStorage is the source of truth in the browser → data survives refresh.
- *   • When the karaoke preview server is running, every write is mirrored to
- *     /api/data → JSON files under data/ in the site's git repo, so your data is
- *     versioned with the site and deploys with it as read-only seed data.
+ *   • When the karaoke preview server is running it is the source of truth:
+ *     reads come from /api/data and every write is mirrored there → JSON files
+ *     under data/ in the site's git repo, so all users share one dataset and
+ *     it is versioned with the site, deploying as read-only seed data.
+ *   • Without the server, localStorage keeps data alive across refreshes.
  *   • On static hosting, reads fall back to those committed data/*.json files.
  *
  * API (all async unless noted):
@@ -18,8 +19,8 @@
  *   only works for a logged-in admin (creates a regular account; the admin
  *   stays signed in) and admin rights are granted via setAdmin.
  *
- * Data is namespaced per signed-in user (or "guest"). Passwords are stored as
- * salted SHA-256 hashes.
+ * Data is shared: every user reads and writes the same records, so changes are
+ * global rather than per-account. Passwords are stored as salted SHA-256 hashes.
  *
  * ⚠️ Honest limits: on a public static host there is NO server enforcing anything —
  * this auth keeps casual users separated, it does not protect secrets. For real
@@ -47,12 +48,14 @@
     return fallback;
   }
   async function rawGet(path, fallback) {
+    if (await apiAvailable()) {             // local dev API first: shared data may
+      try {                                 // have been changed by another user
+        const r = await fetch(`${API}/${path}`);
+        if (r.ok) { const v = await r.json(); localStorage.setItem(lsKey(path), JSON.stringify(v)); return v; }
+      } catch (e) {}
+    }
     const local = localStorage.getItem(lsKey(path));
     if (local !== null) { try { return JSON.parse(local); } catch (e) {} }
-    try {                                   // local dev API
-      const r = await fetch(`${API}/${path}`);
-      if (r.ok) { const v = await r.json(); localStorage.setItem(lsKey(path), JSON.stringify(v)); return v; }
-    } catch (e) {}
     try {                                   // deployed: committed seed data
       const r = await fetch(`data/${path}.json`, { cache: "no-store" });
       if (r.ok) { const v = await r.json(); localStorage.setItem(lsKey(path), JSON.stringify(v)); return v; }
@@ -140,8 +143,8 @@
     },
   };
 
-  // ---- namespaced store ----
-  const ns = (key) => `u/${user.current() || "guest"}/${key}`;
+  // ---- shared store (every user reads and writes the same records) ----
+  const ns = (key) => `shared/${key}`;
   window.kstore = {
     set: (key, value) => rawSet(ns(key), value),
     get: (key, fallback = null) => rawGet(ns(key), fallback),
