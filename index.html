@@ -26,6 +26,9 @@
   .rsvp-yes { color: #2e7d4f; font-weight: 600; }
   .rsvp-pending { color: #c07b1a; }
   .stats { color: #8a7580; font-size: 0.9rem; }
+  h3 { color: #4a3b42; margin: 1.2rem 0 0.2rem; }
+  select { font: inherit; padding: 0.45rem; border: 2px solid #ecd9e2;
+           border-radius: 8px; color: inherit; background: #fff; }
 </style>
 </head>
 <body>
@@ -47,6 +50,16 @@
   </div>
   <p class="stats" id="task-stats"></p>
   <ul id="task-list"></ul>
+
+  <h2>Wedding Inventory</h2>
+  <p class="subtitle">Everything we could possibly need — check items off as they're handled.</p>
+  <div class="row">
+    <select id="inv-category"></select>
+    <input id="inv-input" type="text" placeholder="New inventory item…" />
+    <button id="add-inv">Add item</button>
+  </div>
+  <p class="stats" id="inv-stats"></p>
+  <div id="inventory"></div>
 
 <script>
   // --- Guest list ---
@@ -150,8 +163,114 @@
   document.getElementById("add-task").addEventListener("click", addTask);
   taskInput.addEventListener("keydown", e => { if (e.key === "Enter") addTask(); });
 
+  // --- Inventory ---
+  const inventory = [
+    { name: "📮 Stationery & Paper Goods", items: [
+      "Save-the-dates", "Invitations", "RSVP cards", "Envelopes & postage",
+      "Ceremony programs", "Menu cards", "Place cards & escort cards",
+      "Table numbers", "Guest book", "Thank-you cards",
+    ]},
+    { name: "💐 Flowers & Decor", items: [
+      "Bridal bouquet", "Bridesmaid bouquets", "Boutonnieres", "Corsages",
+      "Ceremony arch / arbor flowers", "Aisle arrangements", "Centerpieces",
+      "Flower petals for flower girl", "Candles & votives", "String lights",
+      "Welcome sign", "Seating chart display",
+    ]},
+    { name: "👗 Attire & Beauty", items: [
+      "Wedding dress", "Veil & accessories", "Suit / tuxedo", "Shoes (both)",
+      "Wedding rings", "Ring box / pillow", "Hair & makeup trial",
+      "Jewelry", "Something old, new, borrowed, blue",
+    ]},
+    { name: "🏛️ Venue & Catering", items: [
+      "Ceremony venue", "Reception venue", "Caterer / menu selection",
+      "Wedding cake", "Bar & beverages", "Champagne for toasts",
+      "Tables, chairs & linens", "Dinnerware & glassware rentals",
+      "Tent (if outdoor)", "Restroom facilities (if outdoor)",
+    ]},
+    { name: "🎶 Music & Entertainment", items: [
+      "DJ or live band", "Ceremony musicians", "Sound system & microphones",
+      "First-dance song selection", "Reception playlist / do-not-play list",
+      "Dance floor", "Photo booth",
+    ]},
+    { name: "📸 Photo & Video", items: [
+      "Photographer", "Videographer", "Engagement shoot", "Shot list",
+      "Disposable cameras for tables",
+    ]},
+    { name: "📋 Logistics & Legal", items: [
+      "Marriage license", "Officiant", "Wedding planner / day-of coordinator",
+      "Transportation / limo", "Hotel blocks for guests", "Wedding insurance",
+      "Vendor tips (cash envelopes)", "Emergency day-of kit",
+    ]},
+    { name: "🎁 Favors & Extras", items: [
+      "Guest favors", "Welcome bags for out-of-town guests",
+      "Gifts for wedding party", "Gifts for parents", "Card box",
+      "Sparklers / send-off supplies", "Kids' activity table",
+    ]},
+  ].map(cat => ({ name: cat.name, items: cat.items.map(text => ({ text, done: false })) }));
+
+  const inventoryEl = document.getElementById("inventory");
+  const invStats = document.getElementById("inv-stats");
+  const invInput = document.getElementById("inv-input");
+  const invCategory = document.getElementById("inv-category");
+
+  inventory.forEach((cat, i) => {
+    const opt = document.createElement("option");
+    opt.value = i;
+    opt.textContent = cat.name;
+    invCategory.appendChild(opt);
+  });
+
+  function renderInventory() {
+    inventoryEl.innerHTML = "";
+    let total = 0, doneTotal = 0;
+    inventory.forEach(cat => {
+      const heading = document.createElement("h3");
+      const doneCount = cat.items.filter(it => it.done).length;
+      heading.textContent = `${cat.name} (${doneCount}/${cat.items.length})`;
+      inventoryEl.appendChild(heading);
+
+      const ul = document.createElement("ul");
+      cat.items.forEach((item, i) => {
+        const li = document.createElement("li");
+
+        const checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+        checkbox.checked = item.done;
+        checkbox.style.flex = "none";
+        checkbox.addEventListener("change", () => { item.done = checkbox.checked; renderInventory(); });
+
+        const label = document.createElement("span");
+        label.className = "grow" + (item.done ? " done" : "");
+        label.textContent = item.text;
+
+        const remove = document.createElement("button");
+        remove.className = "small";
+        remove.textContent = "✕";
+        remove.addEventListener("click", () => { cat.items.splice(i, 1); renderInventory(); });
+
+        li.append(checkbox, label, remove);
+        ul.appendChild(li);
+      });
+      inventoryEl.appendChild(ul);
+      total += cat.items.length;
+      doneTotal += doneCount;
+    });
+    invStats.textContent = `${doneTotal} of ${total} items handled`;
+  }
+
+  function addInventoryItem() {
+    const text = invInput.value.trim();
+    if (!text) return;
+    inventory[invCategory.value].items.push({ text, done: false });
+    invInput.value = "";
+    renderInventory();
+  }
+  document.getElementById("add-inv").addEventListener("click", addInventoryItem);
+  invInput.addEventListener("keydown", e => { if (e.key === "Enter") addInventoryItem(); });
+
   renderGuests();
   renderTasks();
+  renderInventory();
 </script>
 </body>
 </html>
