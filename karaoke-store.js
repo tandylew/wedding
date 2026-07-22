@@ -12,6 +12,9 @@
  *   kstore.del(key)                 kstore.keys()
  *   kstore.user.current()  (sync)   kstore.user.signup(name, password)
  *   kstore.user.login(name, password)                kstore.user.logout()  (sync)
+ *   kstore.user.list()              kstore.user.isAdmin(name?)
+ *   kstore.user.setAdmin(name, isAdmin)   — admins only; the first account
+ *   ever created is the admin, after that only an admin can grant admin.
  *
  * Data is namespaced per signed-in user (or "guest"). Passwords are stored as
  * salted SHA-256 hashes.
@@ -86,7 +89,8 @@
       if (users[name]) throw new Error("user already exists");
       const salt = [...crypto.getRandomValues(new Uint8Array(8))]
         .map((b) => b.toString(16).padStart(2, "0")).join("");
-      users[name] = { salt, hash: await sha256(salt + password) };
+      users[name] = { salt, hash: await sha256(salt + password),
+                      admin: Object.keys(users).length === 0 };
       await rawSet(USERS, users);
       sessionStorage.setItem(SITE + ":user", name);
       return name;
@@ -101,6 +105,32 @@
       return name;
     },
     logout() { sessionStorage.removeItem(SITE + ":user"); },
+    async list() {
+      const users = (await rawGet(USERS, {})) || {};
+      return Object.keys(users).sort().map((n) => ({ name: n, admin: !!users[n].admin }));
+    },
+    async isAdmin(name) {
+      name = clean(name || user.current());
+      if (!name) return false;
+      const users = (await rawGet(USERS, {})) || {};
+      return !!(users[name] && users[name].admin);
+    },
+    async setAdmin(name, admin) {
+      name = clean(name);
+      const users = (await rawGet(USERS, {})) || {};
+      const me = user.current();
+      if (!me || !users[me] || !users[me].admin)
+        throw new Error("only an admin can change admin rights");
+      if (!users[name]) throw new Error("no such user");
+      if (!admin) {
+        const admins = Object.keys(users).filter((n) => users[n].admin);
+        if (admins.length === 1 && admins[0] === name)
+          throw new Error("cannot remove the last admin");
+      }
+      users[name].admin = !!admin;
+      await rawSet(USERS, users);
+      return true;
+    },
   };
 
   // ---- namespaced store ----
