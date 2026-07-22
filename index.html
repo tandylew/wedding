@@ -56,7 +56,7 @@
     <section>
       <h2>Guest List</h2>
       <div class="row">
-        <input id="guest-input" type="text" placeholder="Guest name…" />
+        <input id="guest-input" type="text" placeholder="Search or add guest…" />
         <button id="add-guest">Add guest</button>
       </div>
       <p class="stats" id="guest-stats"></p>
@@ -119,8 +119,10 @@
   const guestInput = document.getElementById("guest-input");
 
   function renderGuests() {
+    const query = guestInput.value.trim().toLowerCase();
     guestList.innerHTML = "";
-    guests.forEach((g, i) => {
+    const visible = guests.filter(g => g.name.toLowerCase().includes(query));
+    visible.forEach(g => {
       const li = document.createElement("li");
 
       const name = document.createElement("span");
@@ -139,13 +141,14 @@
       const remove = document.createElement("button");
       remove.className = "small";
       remove.textContent = "✕";
-      remove.addEventListener("click", () => { guests.splice(i, 1); renderGuests(); });
+      remove.addEventListener("click", () => { guests.splice(guests.indexOf(g), 1); renderGuests(); });
 
       li.append(name, status, toggle, remove);
       guestList.appendChild(li);
     });
     const confirmed = guests.filter(g => g.rsvp).length;
-    guestStats.textContent = `${guests.length} guests · ${confirmed} RSVP’d`;
+    guestStats.textContent = `${guests.length} guests · ${confirmed} RSVP’d` +
+      (query ? ` · ${visible.length} match${visible.length === 1 ? "" : "es"}` : "");
     kstore.set("guests", guests);
   }
 
@@ -158,6 +161,7 @@
   }
   document.getElementById("add-guest").addEventListener("click", addGuest);
   guestInput.addEventListener("keydown", e => { if (e.key === "Enter") addGuest(); });
+  guestInput.addEventListener("input", renderGuests);
 
   // --- To-do list ---
   let tasks = [
