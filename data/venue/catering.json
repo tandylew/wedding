@@ -1,0 +1,193 @@
+{
+  "provider": "Bacchanal Catering — exclusive F&B partner (2026–2027 menu)",
+  "tagNote": "V = Vegetarian, VE = Vegan, GF = Gluten Free, DF = Dairy Free, CS = Contains Shellfish, CN = Contains Nuts",
+  "allPackagesInclude": [
+    "Food & wine tasting for up to 4 (once contracted)",
+    "Menu + floor plan design and revisions",
+    "Vendor load-in/out coordination",
+    "Complimentary hand-passed bubbles post ceremony",
+    "Banquet tables, floor-length linens, serving equipment",
+    "Send-off treat bag"
+  ],
+  "horsDoeuvres": {
+    "rule": "Choice of 3",
+    "pricingPerPerson": { "30min": 15, "1hr": 22, "additional30min": 5, "add1More": 3, "add2More": 5 },
+    "cold": [
+      "Avocado Toast, Grape Tomato (VE)",
+      "Caprese Skewers, Mozzarella Pearls, Basil, Grape Tomatoes, Balsamic Reduction (V, GF)",
+      "Cucumber Cups, Herb Goat Cheese, Pickled Shallots, Dill (V, GF)",
+      "Beet Tartare, Herb Goat Cheese, Pistachios (V, GF, CN)",
+      "Beef Tartare, Tri Tip, Capers, Horseradish, Lebnah, Dijon (GF)",
+      "Deviled Eggs Trio: Caviar, Bacon Crumbles, Piquillo Peppers (GF, DF)",
+      "Babaganoush Crostini, Ricotta, Sweety Drop (V)",
+      "Gulf Fish Ceviche, Pepper Brunoise, Micro Cilantro (GF, DF)",
+      "Shrimp Cocktail (GF, DF, CS)",
+      "Smoked Gulf Fish Toast, Lebnah, Caviar, Dill",
+      "Cajun Crostini, Boudin, Candied Andouille, Pickled Okra (DF)",
+      "Bruschetta, Tomato, Basil, Garlic Oil, Reduced Balsamic (VE)",
+      "Creole Tomato Jam Crostini, Basil, Balsamic Reduction (VE)",
+      "Watermelon Gazpacho, Tomato, Cucumber, Red Onion, Basil (VE, DF)",
+      "Bloody Mary Oyster Shooter (GF, DF, CS)"
+    ],
+    "warm": [
+      "Pimento Cheese Stuffed Gougers (V)",
+      "Smoked Gouda Jambalaya Arancini, Andouille, Smoked Boudin, Bravas Sauce (can be V)",
+      "Steak Crostini, Whipped Herbed Goat Cheese, Piquillo Peppers",
+      "Brie and Brandied Mushroom Tartlets (V)",
+      "Spanakopita, Greek Puff Pastry, Spinach, Feta (V)",
+      "Baked Shrimp & Crab Tartlets (CS)",
+      "Spicy Lamb Albondigas, Bravas Sauce, Mint (DF)",
+      "Pork Belly Skewer, Apple, Mustard Vinaigrette (DF, GF)",
+      "Mini Beef Debris Pies, Piquillo Aioli",
+      "Bacon Wrapped Dates, Chorizo, Roasted Tomato Red Pepper Sauce (GF, DF)",
+      "Creole Crab Cake Popper, Mediterranean Tartar Sauce (CS, GF)",
+      "Alligator & Pork Boudin Bites, B & B Pickle, Sweety Drop, Rosé Mustard (DF)",
+      "BBQ Shrimp and Gouda Grits (CS)",
+      "Tostones, Avocado-Jalapeno Crema, Pico de Gallo, Radish (VE, GF, DF)",
+      "Chicken and Sausage Gumbo Shooter (DF)"
+    ]
+  },
+  "cocktailHourAdditions": {
+    "grazing": "Grazing à la Bacchanal — Monger's choice of 5 cheeses & 3 cured meats, replenished 1hr: $15 pp (+$20/box GF crackers)",
+    "oysters": [
+      { "label": "Two sacks (200 oysters, up to 80 guests)", "price": 550 },
+      { "label": "Three sacks (300 oysters, up to 120 guests)", "price": 825 },
+      { "label": "Four sacks (400 oysters, up to 160 guests)", "price": 1100 },
+      { "label": "Five sacks (500 oysters, up to 200 guests)", "price": 1375 }
+    ],
+    "oysterNotes": "+$250 chargrilled set-up; +$220 per oyster chef (2 chefs for 3+ sacks); 2.5 oysters pp/hr recommended",
+    "fullRawSeafoodBar": "Market price — oysters, jumbo shrimp cocktail, marinated crab claws, smoked fish dip"
+  },
+  "dinnerStyles": [
+    { "id": "family", "label": "Family Style Dinner", "pricePerPerson": 47, "rule": "1st course: one salad OR one appetizer. 2nd course: one entrée + two sides.", "notes": "60–90 min service. China/flatware/glassware/guest tables not included." },
+    { "id": "plated", "label": "Plated Dinner", "pricePerPerson": 45, "rule": "1st course: one salad OR one appetizer. 2nd course: one entrée + two sides.", "notes": "Min 8 / cap 150 guests. Two pre-selected entrée choices +$10 pp (counts + seating chart due 2 weeks out)." },
+    { "id": "stations", "label": "Stations", "pricePerPerson": 43, "rule": "One appetizer OR one salad + one entrée + two sides.", "notes": "Replenished 120 min; min 15 guests. Complimentary rolls & butter + crudité platter per 100 guests." }
+  ],
+  "dinnerAddOnsPerPerson": { "salad": 8, "appetizer": 12, "entree": 14, "side": 10, "dessert": 12, "breads": 5 },
+  "salads": [
+    "Kale Salad, Seasonal Vegetables, Croutons, Sherry Vinaigrette (VE)",
+    "Leafy Green Salad, Tomato, Pickled Shallot, Dehydrated Radish, Balsamic Vinaigrette (VE, GF)",
+    "Quinoa Salad, Cucumbers, Red Onions, Tomatoes, Yuzu Vinaigrette (VE, GF)",
+    "Crisp Greek Salad, Feta, Cherry Tomatoes, Kalamata Olives, Red Onions, Greek Vinaigrette (V, GF)",
+    "Elote Salad, Cotija, Tajin, Cilantro, Lime Crema Dressing (V, GF)",
+    "Spinach and Marinated Artichoke Hearts Salad, Sundried Tomatoes, Herbs de Bacchanal (VE, GF)",
+    "Roasted Beet Salad, Lemon Garlic Aioli, Marcona Almonds, Dill Vinaigrette (V, GF, CN)",
+    "Roasted Butternut Squash Salad, Baby Arugula, Toasted Pecans, Blood Orange Vinaigrette (VE, GF, CN)",
+    "Cabbage & Pomegranate Ensalada (VE)"
+  ],
+  "appetizers": [
+    "Roasted Pork Belly, Steen's Cane Syrup Mustard Vinaigrette, Red Cabbage (GF, DF)",
+    "Louisiana Rosé Barbecue-Style Shrimp & Gouda Grits (CS, GF)",
+    "Wild Mushroom Ragu, Gouda Grits (V)",
+    "Smoked Lamb Lollipop, Chimichurri (DF, GF)",
+    "Jumbo Lump Creole Crab Cakes, Mediterranean Tartar Sauce (CS)",
+    "Turmeric Charred Cauliflower, Lemon Roasted Garlic Aioli (V, can be VE)",
+    "Gambas al Ajillo, Gulf Shrimp, Garlic, Sherry Wine, Chili Flakes (GF, DF, CS)",
+    "Italian Beef Meatball, Vodka Sauce",
+    "Smoked Gouda Jambalaya Arancini, Andouille, Smoked Boudin, Bravas Sauce (can be V)"
+  ],
+  "entrees": [
+    "Duck Fat Confit Chicken Quarter, Roasted Garlic (GF, DF)",
+    "Beef Debris, Caramelized Peppers & Onions, Creole Demi Glace (GF, DF)",
+    "Beef Tenderloin, Horseradish Mustard Sauce (GF)",
+    "Paprika Smoked Beef Short Ribs, Red Wine Braise (GF, DF)",
+    "Seasonal Gulf Fish, Bacchanal Herb Salsa Verde (GF, DF)",
+    "Seared Gulf Fish Courtbouillon, Roasted Fennel, Tomato, Trinity",
+    "Seared Gulf Fish, Brown Butter Pecan Sauce (GF, CN)",
+    "Paprika Rubbed Lamb Shoulder, Pomegranate Molasses, Lamb Jus (GF, DF)",
+    "Chili Roasted Pork Loin (GF, DF)",
+    "Grilled Pork Chops, Balsamic Glaze (GF, DF)",
+    "Jambalaya, Andouille, Chicken, Tasso, Trinity (GF, DF, can be V/CS)",
+    "Red Beans, Andouille, Braised Pork, Tasso, Louisiana Rice (GF, can be VE)",
+    "Cavatappi Pasta, Roasted Seasonal Vegetables, Garlic, Parmesan, White Wine Sauce (V)",
+    "Chicken Piccata, Bucatini Pasta, Lemon Caper Sauce",
+    "Shrimp Diavolo, Bucatini Pasta, Spicy Vodka Sauce",
+    "Smoked Cauliflower and Mushroom Cassoulet, Trinity, Crunchy Onion Garlic (VE, DF, GF)"
+  ],
+  "sides": [
+    "Roasted Brussels Sprouts, Mustard Vinaigrette (VE, GF, DF)",
+    "Mixed Charred Vegetables (V, GF, DF)",
+    "Corn Macque Choux (V, GF, can be VE)",
+    "Smothered Greens, Rosé, Smokey Pork Broth, Trinity (GF, can be VE)",
+    "Roasted Seasonal Vegetables, Lebnah Dressing (V, GF)",
+    "Southern Style Green Beans, Toasted Pecans, Crunchy Onion & Garlic (GF, CN, can be VE)",
+    "Fideo, Roasted Piquillo Peppers, Tomato, Garlic, Spanish Paprika (VE)",
+    "Roasted Candied Sweet Potatoes, Pecans, Herbs de Bacchanal (V, GF, CN)",
+    "Potatoes au Gratin, Crunchy Onion Garlic Topping (V, GF)",
+    "Roasted Black Garlic Mashed Potatoes (V, GF)",
+    "Roasted Fingerling Potatoes, Confit Garlic, Herbs de Bacchanal (VE, GF)",
+    "Roasted Glazed Carrots, Garlic, Honey, Almond (V, GF, CN)",
+    "Baked Mac & Cheese, Cheddar, Gouda, Parmesan, Crunchy Onion & Garlic (V)"
+  ],
+  "chefAttendedStations": {
+    "note": "120 min service; +$220 per chef per station per 100 guests",
+    "items": [
+      { "name": "Horseradish Crusted Beef Tenderloin, Red Wine au Jus (GF)", "pricePerPerson": 22 },
+      { "name": "Slow Roasted Prime Rib, Red Wine au Jus, Horseradish Sauce (GF)", "pricePerPerson": 22 },
+      { "name": "Boudin Roasted Porchetta, Crispy Crackling, Mustard Aioli", "pricePerPerson": 22 },
+      { "name": "Slow Cooked Brisket, Rosé BBQ Rub, Moonshine BBQ Sauce (DF)", "pricePerPerson": 25 },
+      { "name": "Parmesan Wheel Herb Bucatini, Basil, Cherry Tomatoes, Pesto (V)", "pricePerPerson": 18 },
+      { "name": "Hand-Tossed Caesar Salad (can be GF; +$5 chicken / +$8 shrimp)", "pricePerPerson": 16 }
+    ]
+  },
+  "desserts": {
+    "chefAttendedStations": "Bananas Foster or Cherries Jubilee over vanilla ice cream, or piped cannolis with toppings — $14 pp, 60 min, chef included",
+    "plates": [
+      "Torta de Santiago, Almond Cake, Seasonal Fruit Compote (V, CN)",
+      "Chocolate Torte, Date Molasses, Whipped Date Cream (V, GF)",
+      "Coffee Cake, Whipped Espresso Cream (V)",
+      "Basque Cheesecake, Ponchatoula Strawberries (V)",
+      "Date Bread Pudding, Crème Anglaise (V)",
+      "Crème Brulée (V, GF)"
+    ]
+  },
+  "lateNightBites": {
+    "note": "Minimum 20 per selection",
+    "items": [
+      { "name": "Zapp's Pimento Cheese (V)", "priceEach": 4 },
+      { "name": "Croque Monsieur Bite, Bechamel, Ham, Swiss", "priceEach": 4 },
+      { "name": "Bacon Wrapped Dates, Chorizo (GF, DF)", "priceEach": 4 },
+      { "name": "Mini Beef Debris Pies, Piquillo Aioli", "priceEach": 5 },
+      { "name": "Cochon de Lait Sliders, Creole Roasted Pork", "priceEach": 5 },
+      { "name": "Mini Muffalettas (contains sesame)", "priceEach": 5 },
+      { "name": "Smoked Gouda Jambalaya Arancini (GF, can be V)", "priceEach": 5 },
+      { "name": "Poutine! Crispy Mini Fries, Cheese Curds, Gravy", "priceEach": 6 },
+      { "name": "Mini Raclette, Roasted Baby Potatoes, Crème Fraîche", "priceEach": 6 },
+      { "name": "Chocolate Truffles (V, GF)", "priceEach": 5 },
+      { "name": "Seasonal Fruit Tartlets (V, DF)", "priceEach": 5 }
+    ]
+  },
+  "bar": {
+    "note": "3-hour event basis. Guests 10–21: $8 pp non-alcoholic package; under 10 free. Glassware not included ($8 pp rental).",
+    "beerWineTiers": [
+      { "tier": 1, "pricePerPerson": 32, "extraHourPP": 8, "extraHalfHourPP": 5 },
+      { "tier": 2, "pricePerPerson": 39, "extraHourPP": 8, "extraHalfHourPP": 5 },
+      { "tier": 3, "pricePerPerson": 45, "extraHourPP": 8, "extraHalfHourPP": 5 }
+    ],
+    "beerWineSpiritsTiers": [
+      { "tier": 1, "pricePerPerson": 40, "extraHourPP": 14, "extraHalfHourPP": 7 },
+      { "tier": 2, "pricePerPerson": 45, "extraHourPP": 15, "extraHalfHourPP": 8 },
+      { "tier": 3, "pricePerPerson": 50, "extraHourPP": 16, "extraHalfHourPP": 9 }
+    ],
+    "spiritsIncluded": "Cathead Vodka, Espolòn Blanco Tequila, Elijah Craig Bourbon, Monkey Shoulder Scotch, Fords Gin, Planteray 3 Star White Rum",
+    "specialtyCocktails": "Old Fashioned, Sazerac, Aperitif Spritz, Martini, Cosmopolitan, Paloma, French 75, Margarita",
+    "enhancements": [
+      { "name": "Bubble Tower (31 coupes)", "price": 295 },
+      { "name": "Martini Tower (31 coupes)", "price": 315 },
+      { "name": "Pre-poured Bubbles", "pricePerPerson": 5 },
+      { "name": "Canned Beer & Seltzer", "pricePerPerson": 5 },
+      { "name": "Bloody Mary Bar", "pricePerPerson": 17 },
+      { "name": "Mimosa Bar", "pricePerPerson": 15 },
+      { "name": "Off-Menu Crafted Cocktails", "pricePerPerson": 7 },
+      { "name": "Fresh Mocktails", "pricePerPerson": "5–7" }
+    ]
+  },
+  "feesAndPolicies": [
+    "Labor $220/staff for 3-hour event (+$40/hr after); minimums by service style",
+    "Glassware $8 pp; dinnerware + flatware $6 pp; catering kitchen pop-up min $1,000",
+    "Cake cutting $100 (Bacchanal); 7.5% admin charge + 10.75% sales tax; gratuity optional (5–10% suggested)",
+    "Menu + guaranteed guest count due 14 days before event; count may increase, never decrease",
+    "50% deposit to book; balance due 14 days out; cancellation 50%/75%/100% at <30/<10/<5 days",
+    "Vendor meals $20 pp; kids under 12 menu $10; all dietary restrictions accommodated"
+  ]
+}

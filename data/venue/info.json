@@ -1,0 +1,92 @@
+{
+  "name": "Hotel Peter and Paul — Great Church Hall",
+  "location": "Faubourg Marigny, New Orleans (built 1861, 4,950 sqft, 75 ft ceilings)",
+  "contacts": {
+    "sales": "504.517.9002",
+    "events": "events@hotelpeterandpaul.com",
+    "catering": "catering@bacchanalwine.com",
+    "cateringManager": "Tessa Carrington — tessa@bacchanalwine.com"
+  },
+  "bookingOptions": [
+    { "id": "full", "label": "Ceremony in church + piazza cocktail hour + reception in church", "note": "Includes rehearsal 48 hours prior (bookable one month in advance)" },
+    { "id": "ceremony-only", "label": "Ceremony in the church (incl. microweddings & elopements)", "note": "Booking restrictions apply; no piazza access (add for $1,000); bookable 6 months in advance" },
+    { "id": "ceremony-cocktail", "label": "Ceremony in church + piazza cocktail hour" },
+    { "id": "cocktail-reception", "label": "Piazza cocktail hour + reception in church" },
+    { "id": "reception-only", "label": "Reception in the church", "note": "No piazza access (add cocktail hour for $1,000)" }
+  ],
+  "capacity": {
+    "ceremonySeated": 330,
+    "cocktailStyleReception": "250–350 (not everyone seated)",
+    "seatedBuffet": 200,
+    "seatedPlatedWithDanceFloor": 160
+  },
+  "typicalTimeline": [
+    "5:00 PM — Ceremony in the Great Church Hall",
+    "6:00–7:00 PM — Cocktail hour in the Piazza (church is flipped for reception)",
+    "7:00–10:00 PM — Reception in the church",
+    "All events end by 10:00 PM (neighborhood noise ordinance); extra time = start earlier"
+  ],
+  "siteFees": {
+    "fullEvent3hr": { "sundayToThursday": 9000, "friday": 13000, "saturday": 14000 },
+    "ceremonyOnly1hr": { "sundayToThursday": 4000, "friday": 6000, "saturday": 7000 },
+    "elopementMicro2hr": { "noGuests": 1500, "upTo20Guests": 2500 },
+    "addOns": {
+      "additionalHour": 1000,
+      "piazzaCocktailHourForCeremonyOrReceptionOnly": 1000,
+      "doerrParkingLot75Spots": 650,
+      "weddingPrepPackage": 200,
+      "piazzaTent": "≈$2,000–$4,000 by size (required if >30% rain chance within 3 days)"
+    }
+  },
+  "included": [
+    "Ten 60\" round tables + twelve 30\" tables (highboy or table height)",
+    "95 mahogany Chiavari chairs (chair pads not included)",
+    "2 speakers, 2 subwoofers, 1 microphone; baby grand piano",
+    "Permanent architectural spotlights + up-lighting",
+    "Electricity, A/C or heat, wifi; stocked restrooms; wheelchair accessible"
+  ],
+  "bookingProcess": {
+    "shareToCheckAvailability": [
+      "Preferred date + start time (or months / days of week)",
+      "Package type (full / reception only / ceremony only / undecided)",
+      "Expected guest count",
+      "Couple's first + last names",
+      "Wedding planner name + contact"
+    ],
+    "holds": "Soft hold: free, 2 weeks. Hard hold: $250 non-refundable, 1 month. Dates stay open to others until held.",
+    "securing": "E-sign contract within 7 days of receipt; 50% non-refundable deposit at signing (or within 7 business days).",
+    "planner": "Licensed wedding planner required at least 90 days out (introduced to Molly Peters & Tessa Carrington with license copy).",
+    "cancellation": "Venue: no refunds, date changes only (rebook within 12 months, fee possible). Catering: 50%/75%/100% of estimate at <30/<10/<5 days."
+  },
+  "roomBlocks": {
+    "hotel": "71-room boutique hotel, 10 room types across schoolhouse, rectory, and convent",
+    "courtesy": "Up to 10 rooms — unused rooms released 30 days before arrival, no liability",
+    "guaranteed": "More than 10 rooms — 80% attrition of expected group revenue by 30 days before arrival",
+    "rules": [
+      "No contracts further than 12 months out",
+      "Two-night minimum on Fridays & Saturdays",
+      "Specialty weeks are automatically guaranteed blocks (NYE, Mardi Gras, Easter, French Quarter Fest, Jazz Fest, Memorial Day, Essence Fest, Tales of the Cocktail, Labor Day, Thanksgiving, Christmas + pop-up citywides)"
+    ]
+  },
+  "weddingPrep": {
+    "rooms": "School House Grande Loft (301/309/310), Convent Mother Superior (605/607), Rector's Repose (501)",
+    "package": "$200 + tax on top of room: house sparkling + flutes (10), floor-length mirror, styling chair, 2 lighted table mirrors, extra trash can + removal, 3pm turn-down",
+    "notes": "Check-in 3pm / out 11am; two-night minimum Fri & Sat; in-room photography free"
+  },
+  "rules": [
+    "Bacchanal Catering is the exclusive food & beverage provider (no outside caterers; outside bottles $20/750ml corkage)",
+    "Music capped at 85 dB (stained glass); second lines out of neighborhood by 10 PM",
+    "Load-in from 12 PM day-of; load-out complete 2 hours after event",
+    "No onsite storage or private changing space; candles must be in glass",
+    "Guestroom taxes 16.2% + $1/night; F&B tax 10.25% + 20% service charge; cleaning & security $100/hr each; venue cake cutting $2/slice (max $200)"
+  ],
+  "tours": "Site visits Mon–Fri 10am–3pm (Fri 10 & 11am only), ~1 hour, scheduled in advance",
+  "links": {
+    "weddingPacketPdf": "https://a.storyblok.com/f/164039/x/167470543e/hotel-peter-and-paul-weddings-1-17-25.pdf",
+    "prepPackagePdf": "https://a.storyblok.com/f/164039/x/7d4dbb41ff/wedding-prep-package-11-07-24.pdf",
+    "cateringMenuPdf": "https://drive.google.com/file/d/1qSztB5vH5ISIxAnFQrDZfzwnv_hKuxkp/view",
+    "weddingPhotos": "https://drive.google.com/drive/folders/1DHDIj8DqsCCWGJwLBPUrgBMutfExKblu",
+    "piazzaPhotos": "https://drive.google.com/drive/folders/14vBSf3y_4Pmo2Rp3A8z4ZoCUPJJu_eB2",
+    "theKnot360Tour": "https://www.theknot.com/marketplace/hotel-peter-and-paul-new-orleans-la-2044069"
+  }
+}

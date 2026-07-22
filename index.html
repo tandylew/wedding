@@ -34,6 +34,32 @@
   #inventory h3 { margin-top: 0.6rem; }
   select { font: inherit; padding: 0.45rem; border: 2px solid #ecd9e2;
            border-radius: 8px; color: inherit; background: #fff; }
+  a { color: #b0567a; }
+  #venue-overview { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem 2.5rem;
+                    align-items: start; margin: 0.9rem 0; }
+  @media (max-width: 760px) { #venue-overview { grid-template-columns: 1fr; } }
+  details.vgroup { background: #fff; border: 1px solid #ecd9e2; border-radius: 10px;
+                   padding: 0.1rem 0.9rem 0.3rem; }
+  details.vgroup summary { cursor: pointer; font-weight: 600; color: #b0567a; padding: 0.5rem 0; }
+  .badge { display: inline-block; font-size: 0.65rem; font-weight: 700; background: #ecd9e2;
+           color: #7a4a5e; border-radius: 999px; padding: 0.05rem 0.45rem; margin-left: 0.3rem;
+           vertical-align: 1px; white-space: nowrap; }
+  .builder-card { background: #fff; border: 1px solid #ecd9e2; border-radius: 10px;
+                  padding: 0.9rem 1.1rem; margin: 0.9rem 0; }
+  .builder-card h4 { margin: 0 0 0.4rem; color: #b0567a; }
+  .pick-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+               gap: 0 2rem; align-items: start; }
+  .menu li { padding: 0.3rem 0.4rem; border-bottom: 1px dashed #f2e6ec; }
+  .menu label { display: flex; gap: 0.5rem; align-items: center; cursor: pointer; flex: 1; }
+  .menu input[type="checkbox"], .menu input[type="radio"] { flex: none; }
+  label.opt { display: flex; gap: 0.5rem; align-items: flex-start; cursor: pointer; margin: 0.35rem 0; }
+  label.opt input { flex: none; margin-top: 0.3rem; }
+  .price { color: #8a7580; font-size: 0.85rem; flex: none; }
+  .note { color: #c07b1a; font-size: 0.88rem; margin: 0.3rem 0; }
+  .qty { flex: none; width: 5.5rem; }
+  .total-box { background: #fff; border: 2px solid #b0567a; border-radius: 10px;
+               padding: 0.9rem 1.1rem; margin: 1rem 0; }
+  .total-box .big { font-size: 1.35rem; font-weight: 700; color: #b0567a; margin: 0.5rem 0 0.2rem; }
   footer { color: #8a7580; font-size: 0.8rem; text-align: center; margin: 2rem 0 1rem; }
   .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; margin: 0.9rem 0; }
   .cal-grid .head { text-align: center; font-size: 0.8rem; color: #8a7580; padding: 0.3rem 0; }
@@ -73,6 +99,13 @@
       <ul id="task-list"></ul>
     </section>
   </div>
+
+  <h2>Venue &amp; Catering</h2>
+  <p class="subtitle" id="venue-subtitle">Our venue &amp; menu, all in one place.</p>
+  <p class="note" id="venue-error" hidden></p>
+  <p class="stats" id="venue-contacts"></p>
+  <div id="venue-overview"></div>
+  <div id="catering-builder"></div>
 
   <h2>Wedding Inventory</h2>
   <p class="subtitle">Everything we could possibly need — check items off as they're handled.</p>
@@ -469,8 +502,513 @@
   document.getElementById("export-ics").addEventListener("click", () =>
     downloadIcs(events, "wedding-calendar.ics"));
 
+  // --- Venue & Catering ---
+  const venueOverviewEl = document.getElementById("venue-overview");
+  const venueErrorEl = document.getElementById("venue-error");
+  const builderEl = document.getElementById("catering-builder");
+  const fmt = n => "$" + Math.round(n).toLocaleString("en-US");
+  const fmtPP = n => "$" + n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+  function el(tag, cls, text) {
+    const n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (text !== undefined) n.textContent = text;
+    return n;
+  }
+
+  const DIET_TAGS = new Set(["V", "VE", "GF", "DF", "CS", "CN"]);
+  function nameWithBadges(text) {
+    const span = el("span", "grow");
+    const m = text.match(/^(.*?)\s*\(([^()]*)\)$/);
+    const parts = m ? m[2].split(/[,;]/).map(s => s.trim()).filter(Boolean) : [];
+    if (m && parts.length && parts.every(p => DIET_TAGS.has(p) || /^can be |^contains /i.test(p))) {
+      span.textContent = m[1];
+      parts.forEach(p => span.appendChild(el("span", "badge", p)));
+    } else {
+      span.textContent = text;
+    }
+    return span;
+  }
+
+  // rows: string | [main, price?, note?]
+  function rowsUl(parent, rows) {
+    const ul = el("ul");
+    rows.forEach(r => {
+      const li = el("li");
+      const main = el("span", "grow");
+      if (typeof r === "string") main.textContent = r;
+      else {
+        main.appendChild(el("div", null, r[0]));
+        if (r[2]) main.appendChild(el("div", "stats", r[2]));
+      }
+      li.appendChild(main);
+      if (Array.isArray(r) && r[1]) li.appendChild(el("span", "price", r[1]));
+      ul.appendChild(li);
+    });
+    parent.appendChild(ul);
+  }
+
+  function renderVenueInfo(info) {
+    document.getElementById("venue-subtitle").textContent = `${info.name} · ${info.location}`;
+    const c = info.contacts;
+    const contacts = document.getElementById("venue-contacts");
+    contacts.textContent = "";
+    contacts.append(`Sales ${c.sales} · Events: `);
+    const evA = el("a", null, c.events);
+    evA.href = "mailto:" + c.events;
+    contacts.append(evA, ` · Catering: ${c.cateringManager}`);
+
+    venueOverviewEl.innerHTML = "";
+    function group(title, build) {
+      const box = el("details", "vgroup");
+      box.appendChild(el("summary", null, title));
+      build(box);
+      venueOverviewEl.appendChild(box);
+    }
+
+    group("Booking options", g => rowsUl(g, info.bookingOptions.map(o => [o.label, null, o.note])));
+
+    const capLabels = { ceremonySeated: "Ceremony, seated", cocktailStyleReception: "Cocktail-style reception",
+                        seatedBuffet: "Seated buffet", seatedPlatedWithDanceFloor: "Seated plated dinner + dance floor" };
+    group("Capacity", g => rowsUl(g, Object.entries(info.capacity).map(([k, v]) => [capLabels[k] || k, String(v)])));
+
+    group("Typical timeline", g => rowsUl(g, info.typicalTimeline));
+
+    group("Site fees", g => {
+      const f = info.siteFees;
+      const addOnLabels = { additionalHour: "Additional hour",
+        piazzaCocktailHourForCeremonyOrReceptionOnly: "Piazza cocktail hour (ceremony- or reception-only bookings)",
+        doerrParkingLot75Spots: "Doerr parking lot (75 spots)",
+        weddingPrepPackage: "Wedding prep package", piazzaTent: "Piazza tent" };
+      rowsUl(g, [
+        ["Full event (3 hr)", null, `Sun–Thu ${fmt(f.fullEvent3hr.sundayToThursday)} · Fri ${fmt(f.fullEvent3hr.friday)} · Sat ${fmt(f.fullEvent3hr.saturday)}`],
+        ["Ceremony only (1 hr)", null, `Sun–Thu ${fmt(f.ceremonyOnly1hr.sundayToThursday)} · Fri ${fmt(f.ceremonyOnly1hr.friday)} · Sat ${fmt(f.ceremonyOnly1hr.saturday)}`],
+        ["Elopement / micro (2 hr)", null, `No guests ${fmt(f.elopementMicro2hr.noGuests)} · Up to 20 guests ${fmt(f.elopementMicro2hr.upTo20Guests)}`],
+        ...Object.entries(f.addOns).map(([k, v]) =>
+          typeof v === "number" ? [addOnLabels[k] || k, fmt(v)] : [addOnLabels[k] || k, null, v]),
+      ]);
+    });
+
+    group("What's included", g => rowsUl(g, info.included));
+
+    group("Booking steps", g => {
+      g.appendChild(el("p", "stats", "Share with the venue to check availability:"));
+      rowsUl(g, info.bookingProcess.shareToCheckAvailability);
+      rowsUl(g, [
+        ["Holds", null, info.bookingProcess.holds],
+        ["Securing the date", null, info.bookingProcess.securing],
+        ["Wedding planner", null, info.bookingProcess.planner],
+        ["Cancellation", null, info.bookingProcess.cancellation],
+      ]);
+      g.appendChild(el("p", "stats", `Tours: ${info.tours}`));
+    });
+
+    group("Resources & links", g => {
+      const labels = { weddingPacketPdf: "Wedding packet (PDF)", prepPackagePdf: "Wedding prep package (PDF)",
+        cateringMenuPdf: "Catering menu (PDF)", weddingPhotos: "Wedding photos",
+        piazzaPhotos: "Piazza photos", theKnot360Tour: "360° virtual tour on The Knot" };
+      const ul = el("ul");
+      Object.entries(info.links).forEach(([k, url]) => {
+        const li = el("li");
+        const a = el("a", "grow", labels[k] || k);
+        a.href = url;
+        a.target = "_blank";
+        a.rel = "noopener";
+        li.appendChild(a);
+        ul.appendChild(li);
+      });
+      g.appendChild(ul);
+    });
+  }
+
+  let catData = null;
+  let stationDessertPP = 14;
+  let catSel = {
+    guests: 100,
+    style: "plated",
+    course1: null,
+    secondEntree: false,
+    entrees: [],
+    sides: [],
+    hors: { on: false, duration: "1hr", items: [] },
+    bar: { pkg: "none", tier: 1 },
+    oysters: "",
+    dessert: { mode: "none", plate: null },
+    lateNight: {},
+  };
+
+  function saveCatering() { kstore.set("catering", catSel); }
+  function entreeMax() { return catSel.style === "plated" && catSel.secondEntree ? 2 : 1; }
+
+  function limitedToggle(arr, value, checked, max) {
+    const i = arr.indexOf(value);
+    if (checked && i === -1) { arr.push(value); while (arr.length > max) arr.shift(); }
+    else if (!checked && i !== -1) arr.splice(i, 1);
+  }
+
+  function limitedList(items, selArr, maxFn) {
+    const ul = el("ul", "menu");
+    items.forEach(text => {
+      const li = el("li");
+      const lab = el("label");
+      const c = el("input");
+      c.type = "checkbox";
+      c.checked = selArr.includes(text);
+      c.addEventListener("change", () => {
+        limitedToggle(selArr, text, c.checked, maxFn());
+        saveCatering();
+        renderCatering();
+      });
+      lab.append(c, nameWithBadges(text));
+      li.appendChild(lab);
+      ul.appendChild(li);
+    });
+    return ul;
+  }
+
+  function radioOption(name, checked, labelNode, onPick) {
+    const lab = el("label", "opt");
+    const r = el("input");
+    r.type = "radio";
+    r.name = name;
+    r.checked = checked;
+    r.addEventListener("change", () => { onPick(); saveCatering(); renderCatering(); });
+    lab.append(r, labelNode);
+    return lab;
+  }
+
+  function computeCatering() {
+    const d = catData;
+    const g = Math.max(0, Math.floor(+catSel.guests || 0));
+    const lines = [], notes = [];
+
+    const style = d.dinnerStyles.find(s => s.id === catSel.style) || d.dinnerStyles[0];
+    let dinnerPP = style.pricePerPerson;
+    let label = `${style.label} — ${fmt(dinnerPP)} pp × ${g}`;
+    if (catSel.style === "plated" && catSel.secondEntree) {
+      dinnerPP += 10;
+      label = `${style.label} (two entrée choices) — ${fmt(dinnerPP)} pp × ${g}`;
+    }
+    lines.push([label, dinnerPP * g]);
+    if (!catSel.course1) notes.push("Menu: choose one salad or appetizer for the first course.");
+    const needE = entreeMax();
+    if (catSel.entrees.length < needE) notes.push(`Menu: choose ${needE} entrée${needE > 1 ? "s" : ""} (${catSel.entrees.length} selected).`);
+    if (catSel.sides.length !== 2) notes.push(`Menu: choose 2 sides (${catSel.sides.length} selected).`);
+
+    if (catSel.hors.on) {
+      const pp = d.horsDoeuvres.pricingPerPerson[catSel.hors.duration] || 0;
+      lines.push([`Hors d'oeuvres, ${catSel.hors.duration === "1hr" ? "1 hour" : "30 min"} — ${fmt(pp)} pp × ${g}`, pp * g]);
+      if (catSel.hors.items.length !== 3) notes.push(`Hors d'oeuvres: choose exactly 3 items (${catSel.hors.items.length} selected).`);
+    }
+
+    if (catSel.bar.pkg !== "none") {
+      const tiers = catSel.bar.pkg === "bws" ? d.bar.beerWineSpiritsTiers : d.bar.beerWineTiers;
+      const t = tiers.find(x => x.tier === +catSel.bar.tier) || tiers[0];
+      lines.push([`${catSel.bar.pkg === "bws" ? "Beer, wine & spirits" : "Beer & wine"} bar, tier ${t.tier} — ${fmt(t.pricePerPerson)} pp × ${g}`, t.pricePerPerson * g]);
+    }
+
+    if (catSel.oysters) {
+      const o = d.cocktailHourAdditions.oysters.find(x => x.label === catSel.oysters);
+      if (o) lines.push([`Oysters — ${o.label}`, o.price]);
+    }
+
+    if (catSel.dessert.mode === "plate") {
+      lines.push([`Plated dessert — ${fmt(d.dinnerAddOnsPerPerson.dessert)} pp × ${g}`, d.dinnerAddOnsPerPerson.dessert * g]);
+      if (!catSel.dessert.plate) notes.push("Dessert: choose a plated dessert.");
+    } else if (catSel.dessert.mode === "station") {
+      lines.push([`Chef-attended dessert station — ${fmt(stationDessertPP)} pp × ${g}`, stationDessertPP * g]);
+    }
+
+    d.lateNightBites.items.forEach(it => {
+      if (!(it.name in catSel.lateNight)) return;
+      const qty = catSel.lateNight[it.name] || 0;
+      lines.push([`${it.name} × ${qty}`, qty * it.priceEach]);
+      if (qty < 20) notes.push(`Late night bites: minimum 20 of "${it.name}".`);
+    });
+
+    const total = lines.reduce((s, [, amt]) => s + amt, 0);
+    return { g, lines, notes, total };
+  }
+
+  let totalBox = null;
+  function updateTotals() {
+    const { g, lines, notes, total } = computeCatering();
+    totalBox.innerHTML = "";
+    totalBox.appendChild(el("h4", null, "Estimated catering total"));
+    rowsUl(totalBox, lines.map(([label, amt]) => [label, fmt(amt)]));
+    totalBox.appendChild(el("p", "big", fmt(total) + (g ? ` · ${fmtPP(total / g)} per person` : "")));
+    totalBox.appendChild(el("p", "stats",
+      "Estimate only — before 10.75% sales tax, 7.5% admin charge, labor, rentals, and gratuity."));
+    notes.forEach(n => totalBox.appendChild(el("p", "note", "⚠ " + n)));
+  }
+
+  function renderCatering() {
+    const d = catData;
+    builderEl.innerHTML = "";
+    builderEl.appendChild(el("h3", null, "Catering Builder"));
+    builderEl.appendChild(el("p", "stats", `${d.provider} · ${d.tagNote}`));
+
+    const inc = el("details", "vgroup");
+    inc.appendChild(el("summary", null, "Every package includes"));
+    rowsUl(inc, d.allPackagesInclude);
+    builderEl.appendChild(inc);
+
+    // 1 · Guests & dinner style
+    const card1 = el("div", "builder-card");
+    card1.appendChild(el("h4", null, "1 · Guests & dinner style"));
+    const gRow = el("div", "row");
+    gRow.appendChild(el("span", null, "Guest count:"));
+    const gIn = el("input", "qty");
+    gIn.type = "number";
+    gIn.min = "1";
+    gIn.value = catSel.guests;
+    gIn.addEventListener("input", () => { catSel.guests = Math.max(0, Math.floor(+gIn.value || 0)); updateTotals(); });
+    gIn.addEventListener("change", saveCatering);
+    gRow.appendChild(gIn);
+    card1.appendChild(gRow);
+    d.dinnerStyles.forEach(s => {
+      const txt = el("span", "grow");
+      txt.appendChild(el("div", null, `${s.label} — ${fmt(s.pricePerPerson)} pp`));
+      txt.appendChild(el("div", "stats", s.notes));
+      card1.appendChild(radioOption("dinner-style", catSel.style === s.id, txt, () => {
+        catSel.style = s.id;
+        if (s.id !== "plated") catSel.secondEntree = false;
+        catSel.entrees = catSel.entrees.slice(-entreeMax());
+      }));
+    });
+    builderEl.appendChild(card1);
+
+    // 2 · Menu
+    const style = d.dinnerStyles.find(s => s.id === catSel.style) || d.dinnerStyles[0];
+    const card2 = el("div", "builder-card");
+    card2.appendChild(el("h4", null, "2 · Menu"));
+    card2.appendChild(el("p", "stats", `${style.label}: ${style.rule}`));
+    const grid = el("div", "pick-grid");
+
+    const colA = el("div");
+    colA.appendChild(el("h3", null, "First course — pick 1"));
+    [["Salads", d.salads], ["Appetizers", d.appetizers]].forEach(([heading, list]) => {
+      colA.appendChild(el("p", "stats", heading));
+      const ul = el("ul", "menu");
+      list.forEach(text => {
+        const li = el("li");
+        const lab = el("label");
+        const r = el("input");
+        r.type = "radio";
+        r.name = "course1";
+        r.checked = catSel.course1 === text;
+        r.addEventListener("change", () => { catSel.course1 = text; saveCatering(); renderCatering(); });
+        lab.append(r, nameWithBadges(text));
+        li.appendChild(lab);
+        ul.appendChild(li);
+      });
+      colA.appendChild(ul);
+    });
+    grid.appendChild(colA);
+
+    const colB = el("div");
+    colB.appendChild(el("h3", null, `Entrée — pick ${entreeMax()}`));
+    if (catSel.style === "plated") {
+      const lab = el("label", "opt");
+      const c = el("input");
+      c.type = "checkbox";
+      c.checked = catSel.secondEntree;
+      c.addEventListener("change", () => {
+        catSel.secondEntree = c.checked;
+        catSel.entrees = catSel.entrees.slice(-entreeMax());
+        saveCatering();
+        renderCatering();
+      });
+      lab.append(c, el("span", "grow", "Offer a second entrée choice (+$10 pp)"));
+      colB.appendChild(lab);
+    }
+    colB.appendChild(limitedList(d.entrees, catSel.entrees, entreeMax));
+    grid.appendChild(colB);
+
+    const colC = el("div");
+    colC.appendChild(el("h3", null, "Sides — pick 2"));
+    colC.appendChild(limitedList(d.sides, catSel.sides, () => 2));
+    grid.appendChild(colC);
+    card2.appendChild(grid);
+    builderEl.appendChild(card2);
+
+    // 3 · Hors d'oeuvres
+    const card3 = el("div", "builder-card");
+    card3.appendChild(el("h4", null, "3 · Hors d'oeuvres (optional)"));
+    const onLab = el("label", "opt");
+    const onC = el("input");
+    onC.type = "checkbox";
+    onC.checked = catSel.hors.on;
+    onC.addEventListener("change", () => { catSel.hors.on = onC.checked; saveCatering(); renderCatering(); });
+    onLab.append(onC, el("span", "grow", "Add a passed hors d'oeuvres package during cocktail hour"));
+    card3.appendChild(onLab);
+    if (catSel.hors.on) {
+      const hp = d.horsDoeuvres.pricingPerPerson;
+      [["30min", `30 minutes — ${fmt(hp["30min"])} pp`], ["1hr", `1 hour — ${fmt(hp["1hr"])} pp`]].forEach(([v, label]) =>
+        card3.appendChild(radioOption("hors-duration", catSel.hors.duration === v,
+          el("span", "grow", label), () => { catSel.hors.duration = v; })));
+      const n = catSel.hors.items.length;
+      card3.appendChild(el("p", n === 3 ? "stats" : "note", `Choose exactly 3 items (${n}/3 selected)`));
+      const hGrid = el("div", "pick-grid");
+      [["Cold", d.horsDoeuvres.cold], ["Warm", d.horsDoeuvres.warm]].forEach(([heading, list]) => {
+        const col = el("div");
+        col.appendChild(el("h3", null, heading));
+        col.appendChild(limitedList(list, catSel.hors.items, () => 3));
+        hGrid.appendChild(col);
+      });
+      card3.appendChild(hGrid);
+    }
+    builderEl.appendChild(card3);
+
+    // 4 · Bar
+    const card4 = el("div", "builder-card");
+    card4.appendChild(el("h4", null, "4 · Bar package (optional)"));
+    card4.appendChild(el("p", "stats", d.bar.note));
+    [["none", "No bar package"], ["bw", "Beer & wine"], ["bws", "Beer, wine & spirits"]].forEach(([v, label]) =>
+      card4.appendChild(radioOption("bar-pkg", catSel.bar.pkg === v,
+        el("span", "grow", label), () => { catSel.bar.pkg = v; })));
+    if (catSel.bar.pkg !== "none") {
+      const tiers = catSel.bar.pkg === "bws" ? d.bar.beerWineSpiritsTiers : d.bar.beerWineTiers;
+      const tRow = el("div", "row");
+      tRow.appendChild(el("span", null, "Tier:"));
+      const tSel = el("select");
+      tiers.forEach(t => {
+        const opt = el("option", null, `Tier ${t.tier} — ${fmt(t.pricePerPerson)} pp (extra hour +${fmt(t.extraHourPP)} pp)`);
+        opt.value = t.tier;
+        opt.selected = +catSel.bar.tier === t.tier;
+        tSel.appendChild(opt);
+      });
+      tSel.addEventListener("change", () => { catSel.bar.tier = +tSel.value; saveCatering(); renderCatering(); });
+      tRow.appendChild(tSel);
+      card4.appendChild(tRow);
+      if (catSel.bar.pkg === "bws")
+        card4.appendChild(el("p", "stats", `Spirits: ${d.bar.spiritsIncluded} · Cocktails: ${d.bar.specialtyCocktails}`));
+    }
+    builderEl.appendChild(card4);
+
+    // 5 · Extras
+    const card5 = el("div", "builder-card");
+    card5.appendChild(el("h4", null, "5 · Extras (optional)"));
+
+    card5.appendChild(el("h3", null, "Raw oysters at cocktail hour"));
+    const oRow = el("div", "row");
+    const oSel = el("select");
+    const oNone = el("option", null, "None");
+    oNone.value = "";
+    oSel.appendChild(oNone);
+    d.cocktailHourAdditions.oysters.forEach(o => {
+      const opt = el("option", null, `${o.label} — ${fmt(o.price)}`);
+      opt.value = o.label;
+      opt.selected = catSel.oysters === o.label;
+      oSel.appendChild(opt);
+    });
+    oSel.addEventListener("change", () => { catSel.oysters = oSel.value; saveCatering(); renderCatering(); });
+    oRow.appendChild(oSel);
+    card5.appendChild(oRow);
+    card5.appendChild(el("p", "stats", d.cocktailHourAdditions.oysterNotes));
+
+    card5.appendChild(el("h3", null, "Dessert"));
+    [["none", "No dessert add-on"],
+     ["plate", `Plated dessert — ${fmt(d.dinnerAddOnsPerPerson.dessert)} pp`],
+     ["station", `Chef-attended dessert station — ${fmt(stationDessertPP)} pp`]].forEach(([v, label]) =>
+      card5.appendChild(radioOption("dessert-mode", catSel.dessert.mode === v,
+        el("span", "grow", label), () => { catSel.dessert.mode = v; })));
+    if (catSel.dessert.mode === "plate") {
+      const ul = el("ul", "menu");
+      d.desserts.plates.forEach(text => {
+        const li = el("li");
+        const lab = el("label");
+        const r = el("input");
+        r.type = "radio";
+        r.name = "dessert-plate";
+        r.checked = catSel.dessert.plate === text;
+        r.addEventListener("change", () => { catSel.dessert.plate = text; saveCatering(); renderCatering(); });
+        lab.append(r, nameWithBadges(text));
+        li.appendChild(lab);
+        ul.appendChild(li);
+      });
+      card5.appendChild(ul);
+    } else if (catSel.dessert.mode === "station") {
+      card5.appendChild(el("p", "stats", d.desserts.chefAttendedStations));
+    }
+
+    card5.appendChild(el("h3", null, "Late night bites"));
+    card5.appendChild(el("p", "stats", d.lateNightBites.note));
+    const lnUl = el("ul", "menu");
+    d.lateNightBites.items.forEach(it => {
+      const li = el("li");
+      const lab = el("label");
+      const c = el("input");
+      c.type = "checkbox";
+      const on = it.name in catSel.lateNight;
+      c.checked = on;
+      c.addEventListener("change", () => {
+        if (c.checked) catSel.lateNight[it.name] = Math.max(20, catSel.guests || 20);
+        else delete catSel.lateNight[it.name];
+        saveCatering();
+        renderCatering();
+      });
+      lab.append(c, nameWithBadges(it.name));
+      li.appendChild(lab);
+      if (on) {
+        const qty = el("input", "qty");
+        qty.type = "number";
+        qty.min = "20";
+        qty.value = catSel.lateNight[it.name];
+        qty.addEventListener("input", () => {
+          catSel.lateNight[it.name] = Math.max(0, Math.floor(+qty.value || 0));
+          updateTotals();
+        });
+        qty.addEventListener("change", saveCatering);
+        li.appendChild(qty);
+      }
+      li.appendChild(el("span", "price", `${fmt(it.priceEach)} each`));
+      lnUl.appendChild(li);
+    });
+    card5.appendChild(lnUl);
+    builderEl.appendChild(card5);
+
+    totalBox = el("div", "total-box");
+    builderEl.appendChild(totalBox);
+    updateTotals();
+  }
+
+  async function initVenue() {
+    try {
+      const [infoRes, catRes] = await Promise.all([
+        fetch("data/venue/info.json"),
+        fetch("data/venue/catering.json"),
+      ]);
+      if (!infoRes.ok || !catRes.ok) throw new Error("HTTP " + (infoRes.ok ? catRes.status : infoRes.status));
+      const info = await infoRes.json();
+      catData = await catRes.json();
+      const m = String(catData.desserts.chefAttendedStations).match(/\$(\d+)\s*pp/);
+      if (m) stationDessertPP = +m[1];
+      renderVenueInfo(info);
+      const saved = await kstore.get("catering", null);
+      if (saved) {
+        catSel = {
+          ...catSel, ...saved,
+          entrees: Array.isArray(saved.entrees) ? saved.entrees : [],
+          sides: Array.isArray(saved.sides) ? saved.sides : [],
+          hors: { ...catSel.hors, ...(saved.hors || {}),
+                  items: saved.hors && Array.isArray(saved.hors.items) ? saved.hors.items : [] },
+          bar: { ...catSel.bar, ...(saved.bar || {}) },
+          dessert: { ...catSel.dessert, ...(saved.dessert || {}) },
+          lateNight: saved.lateNight || {},
+        };
+      }
+      renderCatering();
+    } catch (err) {
+      venueErrorEl.hidden = false;
+      venueErrorEl.textContent =
+        `Couldn't load venue data (${err.message}). Serve the site over HTTP so data/venue/*.json can be fetched.`;
+    }
+  }
+
   renderInventory();
   renderCalendar();
+  initVenue();
 
   (async () => {
     guests = await kstore.get("guests", guests);
