@@ -24,6 +24,11 @@
   li { display: flex; gap: 0.6rem; align-items: center; padding: 0.5rem 0.6rem;
        border-bottom: 1px solid #ecd9e2; }
   li .grow { flex: 1; }
+  li.sub { margin-left: 1.8rem; padding: 0.3rem 0.6rem; font-size: 0.92rem;
+           border-bottom: 1px dashed #f2e6ec; }
+  input.due { flex: none; width: 8.6rem; padding: 0.15rem 0.3rem; font-size: 0.8rem;
+              border-width: 1px; color: #8a7580; }
+  input.due.overdue { color: #c0392b; border-color: #e0b4b4; }
   .done { text-decoration: line-through; color: #b0a3aa; }
   .rsvp-yes { color: #2e7d4f; font-weight: 600; }
   .rsvp-pending { color: #c07b1a; }
@@ -243,31 +248,96 @@
   const taskStats = document.getElementById("task-stats");
   const taskInput = document.getElementById("task-input");
 
+  let addingSubFor = null;
+
+  function tally(list) {
+    return list.reduce((a, it) => {
+      a.total++; if (it.done) a.done++;
+      (it.subs || []).forEach(s => { a.total++; if (s.done) a.done++; });
+      return a;
+    }, { total: 0, done: 0 });
+  }
+
+  function dueInput(item, rerender) {
+    const d = el("input", "due");
+    d.type = "date";
+    d.value = item.due || "";
+    if (item.due && !item.done && item.due < toISO(today)) d.classList.add("overdue");
+    d.addEventListener("change", () => {
+      if (d.value) item.due = d.value; else delete item.due;
+      rerender();
+    });
+    return d;
+  }
+
+  // one checklist row; o: { rerender, isSub?, reorder?, canSub? }
+  function checkLi(arr, i, o) {
+    const it = arr[i];
+    const li = el("li", o.isSub ? "sub" : null);
+
+    const checkbox = el("input");
+    checkbox.type = "checkbox";
+    checkbox.checked = it.done;
+    checkbox.style.flex = "none";
+    checkbox.addEventListener("change", () => { it.done = checkbox.checked; o.rerender(); });
+
+    li.append(checkbox, el("span", "grow" + (it.done ? " done" : ""), it.text), dueInput(it, o.rerender));
+
+    if (o.reorder) {
+      const up = el("button", "small", "↑");
+      up.disabled = i === 0;
+      up.addEventListener("click", () => { [arr[i - 1], arr[i]] = [arr[i], arr[i - 1]]; o.rerender(); });
+      const down = el("button", "small", "↓");
+      down.disabled = i === arr.length - 1;
+      down.addEventListener("click", () => { [arr[i + 1], arr[i]] = [arr[i], arr[i + 1]]; o.rerender(); });
+      li.append(up, down);
+    }
+    if (o.canSub) {
+      const sub = el("button", "small", "＋");
+      sub.title = "Add a sub-item";
+      sub.addEventListener("click", () => { addingSubFor = addingSubFor === it ? null : it; o.rerender(); });
+      li.append(sub);
+    }
+    const remove = el("button", "small", "✕");
+    remove.addEventListener("click", () => { arr.splice(i, 1); o.rerender(); });
+    li.append(remove);
+    return li;
+  }
+
+  function subEntryLi(parent, rerender) {
+    const li = el("li", "sub");
+    const input = el("input");
+    input.placeholder = "New sub-item…";
+    const add = () => {
+      const text = input.value.trim();
+      if (!text) return;
+      (parent.subs = parent.subs || []).push({ text, done: false });
+      addingSubFor = null;
+      rerender();
+    };
+    input.addEventListener("keydown", e => {
+      if (e.key === "Enter") add();
+      if (e.key === "Escape") { addingSubFor = null; rerender(); }
+    });
+    const ok = el("button", "small", "Add");
+    ok.addEventListener("click", add);
+    const cancel = el("button", "small", "✕");
+    cancel.addEventListener("click", () => { addingSubFor = null; rerender(); });
+    li.append(input, ok, cancel);
+    setTimeout(() => input.focus(), 0);
+    return li;
+  }
+
   function renderTasks() {
     taskList.innerHTML = "";
     tasks.forEach((t, i) => {
-      const li = document.createElement("li");
-
-      const checkbox = document.createElement("input");
-      checkbox.type = "checkbox";
-      checkbox.checked = t.done;
-      checkbox.style.flex = "none";
-      checkbox.addEventListener("change", () => { t.done = checkbox.checked; renderTasks(); });
-
-      const label = document.createElement("span");
-      label.className = "grow" + (t.done ? " done" : "");
-      label.textContent = t.text;
-
-      const remove = document.createElement("button");
-      remove.className = "small";
-      remove.textContent = "✕";
-      remove.addEventListener("click", () => { tasks.splice(i, 1); renderTasks(); });
-
-      li.append(checkbox, label, remove);
-      taskList.appendChild(li);
+      taskList.appendChild(checkLi(tasks, i, { rerender: renderTasks, reorder: true, canSub: true }));
+      (t.subs || []).forEach((s, j) =>
+        taskList.appendChild(checkLi(t.subs, j, { rerender: renderTasks, isSub: true, reorder: true })));
+      if (addingSubFor === t) taskList.appendChild(subEntryLi(t, renderTasks));
     });
-    const doneCount = tasks.filter(t => t.done).length;
-    taskStats.textContent = `${doneCount} of ${tasks.length} tasks done`;
+    const c = tally(tasks);
+    taskStats.textContent = `${c.done} of ${c.total} tasks done`;
     kstore.set("tasks", tasks);
   }
 
@@ -282,7 +352,7 @@
   taskInput.addEventListener("keydown", e => { if (e.key === "Enter") addTask(); });
 
   // --- Inventory ---
-  const inventory = [
+  let inventory = [
     { name: "📮 Stationery & Paper Goods", items: [
       "Save-the-dates", "Invitations", "RSVP cards", "Envelopes & postage",
       "Ceremony programs", "Menu cards", "Place cards & escort cards",
@@ -331,51 +401,40 @@
   const invInput = document.getElementById("inv-input");
   const invCategory = document.getElementById("inv-category");
 
-  inventory.forEach((cat, i) => {
-    const opt = document.createElement("option");
-    opt.value = i;
-    opt.textContent = cat.name;
-    invCategory.appendChild(opt);
-  });
-
   function renderInventory() {
+    const selected = invCategory.value;
+    invCategory.innerHTML = "";
+    inventory.forEach((cat, i) => {
+      const opt = document.createElement("option");
+      opt.value = i;
+      opt.textContent = cat.name;
+      invCategory.appendChild(opt);
+    });
+    if (selected !== "" && +selected < inventory.length) invCategory.value = selected;
+
     inventoryEl.innerHTML = "";
     let total = 0, doneTotal = 0;
     inventory.forEach(cat => {
       const box = document.createElement("section");
       const heading = document.createElement("h3");
-      const doneCount = cat.items.filter(it => it.done).length;
-      heading.textContent = `${cat.name} (${doneCount}/${cat.items.length})`;
+      const c = tally(cat.items);
+      heading.textContent = `${cat.name} (${c.done}/${c.total})`;
       box.appendChild(heading);
 
       const ul = document.createElement("ul");
       cat.items.forEach((item, i) => {
-        const li = document.createElement("li");
-
-        const checkbox = document.createElement("input");
-        checkbox.type = "checkbox";
-        checkbox.checked = item.done;
-        checkbox.style.flex = "none";
-        checkbox.addEventListener("change", () => { item.done = checkbox.checked; renderInventory(); });
-
-        const label = document.createElement("span");
-        label.className = "grow" + (item.done ? " done" : "");
-        label.textContent = item.text;
-
-        const remove = document.createElement("button");
-        remove.className = "small";
-        remove.textContent = "✕";
-        remove.addEventListener("click", () => { cat.items.splice(i, 1); renderInventory(); });
-
-        li.append(checkbox, label, remove);
-        ul.appendChild(li);
+        ul.appendChild(checkLi(cat.items, i, { rerender: renderInventory, canSub: true }));
+        (item.subs || []).forEach((s, j) =>
+          ul.appendChild(checkLi(item.subs, j, { rerender: renderInventory, isSub: true })));
+        if (addingSubFor === item) ul.appendChild(subEntryLi(item, renderInventory));
       });
       box.appendChild(ul);
       inventoryEl.appendChild(box);
-      total += cat.items.length;
-      doneTotal += doneCount;
+      total += c.total;
+      doneTotal += c.done;
     });
     invStats.textContent = `${doneTotal} of ${total} items handled`;
+    kstore.set("inventory", inventory);
   }
 
   function addInventoryItem() {
@@ -1117,13 +1176,14 @@
   async function startApp() {
     document.getElementById("app").hidden = false;
     renderAuth();
-    renderInventory();
     renderCalendar();
     initVenue();
     guests = await kstore.get("guests", guests);
     tasks = await kstore.get("tasks", tasks);
+    inventory = await kstore.get("inventory", inventory);
     renderGuests();
     renderTasks();
+    renderInventory();
   }
 
   if (kstore.user.current()) startApp();
