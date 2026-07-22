@@ -30,6 +30,18 @@
               border-width: 1px; color: #8a7580; }
   input.due.overdue { color: #c0392b; border-color: #e0b4b4; }
   .done { text-decoration: line-through; color: #b0a3aa; }
+  .g-name { cursor: pointer; }
+  .g-name:hover { color: #b0567a; }
+  li.guest-detail { display: block; background: #fff; border: 1px solid #ecd9e2;
+                    border-radius: 8px; margin: 0.2rem 0 0.5rem; padding: 0.6rem 0.8rem; }
+  .g-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 0.5rem 1rem; }
+  .g-grid label { display: flex; flex-direction: column; gap: 0.15rem;
+                  font-size: 0.75rem; color: #8a7580; }
+  .g-grid input, .g-grid textarea { min-width: 0; }
+  textarea { font: inherit; padding: 0.45rem; border: 2px solid #ecd9e2;
+             border-radius: 8px; color: inherit; resize: vertical; }
+  textarea:focus { outline: none; border-color: #b0567a; }
   .rsvp-yes { color: #2e7d4f; font-weight: 600; }
   .rsvp-pending { color: #c07b1a; }
   .stats { color: #8a7580; font-size: 0.9rem; }
@@ -189,6 +201,40 @@
   const guestStats = document.getElementById("guest-stats");
   const guestInput = document.getElementById("guest-input");
 
+  let expandedGuest = null;
+
+  function guestField(g, key, labelText, type, placeholder) {
+    const lab = el("label", null, labelText);
+    let inp;
+    if (type === "textarea") { inp = el("textarea"); inp.rows = 2; }
+    else { inp = el("input"); inp.type = type || "text"; if (type === "number") inp.min = "1"; }
+    inp.value = g[key] || "";
+    inp.placeholder = placeholder || "";
+    inp.addEventListener("input", () => {
+      const v = inp.value.trim();
+      if (v) g[key] = type === "number" ? +v : inp.value;
+      else delete g[key];
+    });
+    inp.addEventListener("change", () => kstore.set("guests", guests));
+    lab.appendChild(inp);
+    return lab;
+  }
+
+  function guestDetailLi(g) {
+    const li = el("li", "guest-detail");
+    const grid = el("div", "g-grid");
+    grid.append(
+      guestField(g, "phone", "Phone", "tel", "555-123-4567"),
+      guestField(g, "email", "Email", "email", "name@example.com"),
+      guestField(g, "address", "Address", "text", "Street, city, state, zip"),
+      guestField(g, "party", "Seats in party", "number", "1"),
+      guestField(g, "diet", "Dietary needs", "text", "vegetarian, gluten-free…"),
+      guestField(g, "notes", "Notes", "textarea", "Hotel, transport, kids, song requests…"),
+    );
+    li.appendChild(grid);
+    return li;
+  }
+
   function renderGuests() {
     const query = guestInput.value.trim().toLowerCase();
     guestList.innerHTML = "";
@@ -197,8 +243,13 @@
       const li = document.createElement("li");
 
       const name = document.createElement("span");
-      name.className = "grow";
-      name.textContent = g.name;
+      name.className = "grow g-name";
+      name.textContent = (expandedGuest === g ? "▾ " : "▸ ") + g.name;
+      name.title = "Click for details";
+      name.addEventListener("click", () => {
+        expandedGuest = expandedGuest === g ? null : g;
+        renderGuests();
+      });
 
       const status = document.createElement("span");
       status.textContent = g.rsvp ? "RSVP’d ✓" : "Pending";
@@ -216,9 +267,11 @@
 
       li.append(name, status, toggle, remove);
       guestList.appendChild(li);
+      if (expandedGuest === g) guestList.appendChild(guestDetailLi(g));
     });
     const confirmed = guests.filter(g => g.rsvp).length;
-    guestStats.textContent = `${guests.length} guests · ${confirmed} RSVP’d` +
+    const seats = guests.reduce((n, g) => n + (g.party || 1), 0);
+    guestStats.textContent = `${guests.length} guests · ${seats} seats · ${confirmed} RSVP’d` +
       (query ? ` · ${visible.length} match${visible.length === 1 ? "" : "es"}` : "");
     kstore.set("guests", guests);
   }
