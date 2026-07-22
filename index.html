@@ -30,6 +30,17 @@
   select { font: inherit; padding: 0.45rem; border: 2px solid #ecd9e2;
            border-radius: 8px; color: inherit; background: #fff; }
   footer { color: #8a7580; font-size: 0.8rem; text-align: center; margin: 2rem 0 1rem; }
+  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; margin: 0.9rem 0; }
+  .cal-grid .head { text-align: center; font-size: 0.8rem; color: #8a7580; padding: 0.3rem 0; }
+  .cal-day { min-height: 3.2rem; background: #fff; border: 1px solid #ecd9e2;
+             border-radius: 6px; padding: 0.25rem; font-size: 0.85rem; cursor: pointer; }
+  .cal-day.blank { background: transparent; border: none; cursor: default; }
+  .cal-day.today { border-color: #b0567a; border-width: 2px; }
+  .cal-day .ev { display: block; font-size: 0.7rem; background: #ecd9e2; color: #4a3b42;
+                 border-radius: 4px; padding: 0 0.2rem; margin-top: 2px;
+                 overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+  .event-date { color: #8a7580; font-size: 0.85rem; flex: none; }
+  #cal-title { text-align: center; }
 </style>
 </head>
 <body>
@@ -61,6 +72,24 @@
   </div>
   <p class="stats" id="inv-stats"></p>
   <div id="inventory"></div>
+
+  <h2>Calendar</h2>
+  <p class="subtitle">Key dates — send any event to Google Calendar, or download an .ics file for Apple Calendar, Outlook, and others.</p>
+  <div class="row">
+    <button id="cal-prev" class="small">←</button>
+    <strong id="cal-title" class="grow"></strong>
+    <button id="cal-next" class="small">→</button>
+  </div>
+  <div class="cal-grid" id="cal-grid"></div>
+  <div class="row">
+    <input id="event-date" type="date" style="flex: none;" />
+    <input id="event-input" type="text" placeholder="New event…" />
+    <button id="add-event">Add event</button>
+  </div>
+  <ul id="event-list"></ul>
+  <div class="row">
+    <button id="export-ics">⬇ Download all as .ics</button>
+  </div>
 
   <footer>built by voice</footer>
 
@@ -271,9 +300,157 @@
   document.getElementById("add-inv").addEventListener("click", addInventoryItem);
   invInput.addEventListener("keydown", e => { if (e.key === "Enter") addInventoryItem(); });
 
+  // --- Calendar ---
+  const events = [
+    { date: "2026-08-14", text: "Cake tasting" },
+    { date: "2026-09-05", text: "Venue walkthrough" },
+    { date: "2026-10-17", text: "Wedding day 💍" },
+  ];
+  const calGrid = document.getElementById("cal-grid");
+  const calTitle = document.getElementById("cal-title");
+  const eventList = document.getElementById("event-list");
+  const eventDate = document.getElementById("event-date");
+  const eventInput = document.getElementById("event-input");
+
+  const today = new Date();
+  let calCursor = new Date(today.getFullYear(), today.getMonth(), 1);
+
+  function toISO(date) {
+    const pad = n => String(n).padStart(2, "0");
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+  }
+
+  function nextDayCompact(iso) {
+    const [y, m, d] = iso.split("-").map(Number);
+    return toISO(new Date(y, m - 1, d + 1)).replaceAll("-", "");
+  }
+
+  function googleUrl(ev) {
+    const start = ev.date.replaceAll("-", "");
+    return "https://calendar.google.com/calendar/render?action=TEMPLATE" +
+      `&text=${encodeURIComponent(ev.text)}&dates=${start}/${nextDayCompact(ev.date)}`;
+  }
+
+  function icsFor(evs) {
+    const lines = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Wedding Planner//EN"];
+    evs.forEach((ev, i) => {
+      lines.push(
+        "BEGIN:VEVENT",
+        `UID:${ev.date}-${i}@wedding-planner`,
+        `DTSTART;VALUE=DATE:${ev.date.replaceAll("-", "")}`,
+        `DTEND;VALUE=DATE:${nextDayCompact(ev.date)}`,
+        `SUMMARY:${ev.text.replace(/([,;\\])/g, "\\$1")}`,
+        "END:VEVENT"
+      );
+    });
+    lines.push("END:VCALENDAR");
+    return lines.join("\r\n");
+  }
+
+  function downloadIcs(evs, filename) {
+    const blob = new Blob([icsFor(evs)], { type: "text/calendar" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }
+
+  function renderCalendar() {
+    const year = calCursor.getFullYear(), month = calCursor.getMonth();
+    calTitle.textContent = calCursor.toLocaleString("en", { month: "long", year: "numeric" });
+
+    calGrid.innerHTML = "";
+    ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].forEach(d => {
+      const head = document.createElement("div");
+      head.className = "head";
+      head.textContent = d;
+      calGrid.appendChild(head);
+    });
+
+    const firstDay = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    for (let i = 0; i < firstDay; i++) {
+      const blank = document.createElement("div");
+      blank.className = "cal-day blank";
+      calGrid.appendChild(blank);
+    }
+    for (let day = 1; day <= daysInMonth; day++) {
+      const iso = toISO(new Date(year, month, day));
+      const cell = document.createElement("div");
+      cell.className = "cal-day" + (iso === toISO(today) ? " today" : "");
+      cell.textContent = day;
+      events.filter(ev => ev.date === iso).forEach(ev => {
+        const tag = document.createElement("span");
+        tag.className = "ev";
+        tag.textContent = ev.text;
+        cell.appendChild(tag);
+      });
+      cell.addEventListener("click", () => { eventDate.value = iso; eventInput.focus(); });
+      calGrid.appendChild(cell);
+    }
+
+    eventList.innerHTML = "";
+    [...events].sort((a, b) => a.date.localeCompare(b.date)).forEach(ev => {
+      const li = document.createElement("li");
+
+      const date = document.createElement("span");
+      date.className = "event-date";
+      date.textContent = ev.date;
+
+      const label = document.createElement("span");
+      label.className = "grow";
+      label.textContent = ev.text;
+
+      const google = document.createElement("button");
+      google.className = "small";
+      google.textContent = "Google Calendar";
+      google.addEventListener("click", () => window.open(googleUrl(ev), "_blank"));
+
+      const ics = document.createElement("button");
+      ics.className = "small";
+      ics.textContent = ".ics";
+      ics.addEventListener("click", () => downloadIcs([ev], `${ev.date}-event.ics`));
+
+      const remove = document.createElement("button");
+      remove.className = "small";
+      remove.textContent = "✕";
+      remove.addEventListener("click", () => {
+        events.splice(events.indexOf(ev), 1);
+        renderCalendar();
+      });
+
+      li.append(date, label, google, ics, remove);
+      eventList.appendChild(li);
+    });
+  }
+
+  function addEvent() {
+    const text = eventInput.value.trim();
+    if (!text || !eventDate.value) return;
+    events.push({ date: eventDate.value, text });
+    eventInput.value = "";
+    calCursor = new Date(eventDate.value + "T00:00");
+    calCursor.setDate(1);
+    renderCalendar();
+  }
+  document.getElementById("add-event").addEventListener("click", addEvent);
+  eventInput.addEventListener("keydown", e => { if (e.key === "Enter") addEvent(); });
+  document.getElementById("cal-prev").addEventListener("click", () => {
+    calCursor = new Date(calCursor.getFullYear(), calCursor.getMonth() - 1, 1);
+    renderCalendar();
+  });
+  document.getElementById("cal-next").addEventListener("click", () => {
+    calCursor = new Date(calCursor.getFullYear(), calCursor.getMonth() + 1, 1);
+    renderCalendar();
+  });
+  document.getElementById("export-ics").addEventListener("click", () =>
+    downloadIcs(events, "wedding-calendar.ics"));
+
   renderGuests();
   renderTasks();
   renderInventory();
+  renderCalendar();
 </script>
 </body>
 </html>
